@@ -97,7 +97,7 @@ function DataTableSection({ endpoint }) {
 		{
 			header: '#',
 			Cell: ({ row }) => row.index + 1,
-			size: 75,
+			size: 30,
 		},
 		{
 			accessorKey: 'process_Date',
@@ -105,10 +105,11 @@ function DataTableSection({ endpoint }) {
 			size: 100,
 			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
 		},
+		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 100 },
 		{
 			accessorKey: 'routeSheetNo',
-			header: 'Route Sheet',
-			size: 150,
+			header: 'Sheet No',
+			size: 140,
 			Cell: ({ cell }) => (
 				<Button
 					variant="text"
@@ -121,12 +122,12 @@ function DataTableSection({ endpoint }) {
 			),
 		},
 		// { accessorKey: 'subRouteSheetNo', header: 'SubRouteSheetNo ', size: 210 },
-		{ accessorKey: 'totalQunty', header: 'T-Qty', size: 100 },
-		{ accessorKey: 'pendingQunty', header: 'B-Qty', size: 100 },
+		{ accessorKey: 'totalQunty', header: 'TQ', size: 100 },
+		{ accessorKey: 'pendingQunty', header: 'BQ', size: 100 },
 		{
 			accessorKey: 'isPartial',
 			header: 'Partial',
-			size: 120,
+			size: 100,
 			Cell: ({ row }) => (
 				<Tooltip title={row.original.isPartial === 1 ? 'YES' : 'NO'}>
 					{row.original.isPartial === 1 ? (
@@ -140,7 +141,7 @@ function DataTableSection({ endpoint }) {
 		{
 			accessorKey: 'isCompleted',
 			header: 'Status',
-			size: 130,
+			size: 100,
 			Cell: ({ row }) => (
 				<Tooltip
 					title={

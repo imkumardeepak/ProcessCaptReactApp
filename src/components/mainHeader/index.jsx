@@ -42,7 +42,7 @@ function MainHeader() {
 							sm: 'block',
 						}}
 					>
-						WIP Tracking System
+						Production Process Tracking System
 					</Typography>
 				</Stack>
 				{/* <SearchBar /> */}

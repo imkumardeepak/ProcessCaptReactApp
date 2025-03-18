@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageHeader from '@/components/pageHeader';
 import {
 	Box,
@@ -16,8 +16,6 @@ import {
 	Paper,
 	CircularProgress,
 	Grid, // Import Grid
-	Button,
-	CardHeader, // Import CardHeader
 	Alert,
 	styled, // Import Alert
 	InputAdornment,
@@ -32,8 +30,7 @@ import CardHeader1 from '@/components/cardHeader';
 import { useApi } from '@/services/machineAPIService';
 import useCurrentShift from '@/utils/hooks/useCurrentShift';
 import ConfirmButton from '@/components/ConfirmationBox/ConfirmButton';
-import { CloseOutlined, InfoOutlined } from '@mui/icons-material';
-import { clockNumberClasses } from '@mui/x-date-pickers';
+import { CloseOutlined, InfoOutlined, CheckCircleOutline } from '@mui/icons-material';
 
 function ProcessQCCheck() {
 	return (
@@ -81,6 +78,20 @@ function QCCheckForm() {
 
 	const { enqueueSnackbar } = useSnackbar(); // Use the hook
 
+	const routeSheetRef = useRef(null);
+	const machineQRRef = useRef(null);
+	const personQRRef = useRef(null);
+	const nextMachineQRRef = useRef(null);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (routeSheetRef.current) {
+				routeSheetRef.current.focus();
+			}
+		}, 50); // Reduced delay for better UX
+		return () => clearTimeout(timer); // Cleanup timer
+	}, []);
+
 	const handleInputChange = (e) => {
 		setRouteSheetNo(e.target.value);
 	};
@@ -118,6 +129,7 @@ function QCCheckForm() {
 		setLoading(true);
 		setNoWorkingDetails(false); // Reset before fetching
 		setProductionDetails(null);
+		setnextMachineDetails(null);
 		try {
 			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
 			if (!response || !response.details) {
@@ -147,7 +159,6 @@ function QCCheckForm() {
 				setnextMachineDetails(null);
 				setMachineQRCode('');
 				setNextMachineQRCode('');
-
 				const hasInspectionCodes = filteredDetails.some((detail) =>
 					['R', 'G', 'RFD'].includes(detail.operation_Code),
 				);
@@ -166,6 +177,11 @@ function QCCheckForm() {
 					enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
 					return;
 				}
+				setTimeout(() => {
+					if (machineQRRef.current) {
+						machineQRRef.current.focus();
+					}
+				}, 100);
 				const hasRFI = filteredDetails.some((detail) => ['I'].includes(detail.operation_Code));
 				setShowInspectionStack(hasRFI);
 				setNoWorkingDetails(filteredDetails.length === 0);
@@ -214,6 +230,11 @@ function QCCheckForm() {
 				} else {
 					setEmployeeDetails(response);
 					console.log(response);
+					setTimeout(() => {
+						if (nextMachineQRRef.current) {
+							nextMachineQRRef.current.focus();
+						}
+					}, 100);
 				}
 			} catch (ex) {
 				if (ex.response && ex.response.status === 404) {
@@ -306,6 +327,11 @@ function QCCheckForm() {
 							console.log(filteredResponse.details);
 						}
 						setProductionDetails(filteredResponse);
+						setTimeout(() => {
+							if (personQRRef.current) {
+								personQRRef.current.focus();
+							}
+						}, 100);
 					} catch (err) {
 						console.error('Error fetching details:', err);
 						setProductionDetails(null);
@@ -517,7 +543,7 @@ function QCCheckForm() {
 			setInfoModalOpen(true);
 			return;
 		}
-
+		console.log(routeSheetNo);
 		setIconLoading(true);
 		setIconError(null);
 		setIconData(null);
@@ -553,6 +579,10 @@ function QCCheckForm() {
 						label="Route Sheet No"
 						variant="outlined"
 						fullWidth
+						inputRef={routeSheetRef}
+						autoComplete="off"
+						autoCorrect="off"
+						spellCheck={false}
 						value={routeSheetNo}
 						onChange={handleInputChange}
 						placeholder="Scan or Enter Route Sheet No"
@@ -587,6 +617,7 @@ function QCCheckForm() {
 									label="Machine Code"
 									variant="outlined"
 									fullWidth
+									inputRef={machineQRRef}
 									value={machineQRCode}
 									onChange={(e) => setMachineQRCode(e.target.value)}
 									placeholder="Scan or Enter Machine Code"
@@ -612,6 +643,7 @@ function QCCheckForm() {
 									label="Person QR Code"
 									variant="outlined"
 									fullWidth
+									inputRef={personQRRef}
 									value={personQRCode}
 									onChange={handlePersonQRCodeChange}
 									placeholder="Scan Person QR Code"
@@ -631,6 +663,7 @@ function QCCheckForm() {
 											label="Next Machine Code"
 											variant="outlined"
 											fullWidth
+											inputRef={nextMachineQRRef}
 											value={nextMachineQRCode}
 											onChange={(e) => setNextMachineQRCode(e.target.value)}
 											placeholder="Scan or Enter Machine Code"
@@ -793,11 +826,27 @@ function QCCheckForm() {
 													</TableHead>
 													<TableBody>
 														{iconData.details.map((detail) => (
-															<TableRow key={detail.id}>
+															<TableRow
+																key={detail.id}
+																sx={{
+																	backgroundColor:
+																		detail.isCompleted === 1
+																			? '#C6F4D6'
+																			: 'inherit',
+																}}
+															>
 																<TableCell>{detail.operation_Number}</TableCell>
 																<TableCell>{detail.operation_Code}</TableCell>
 																<TableCell>{detail.operation_Description}</TableCell>
-																<TableCell>{detail.totalQunty}</TableCell>
+																<TableCell>
+																	{detail.totalQunty}
+																	{detail.isCompleted === 0 && (
+																		<CheckCircleOutline
+																			color="success"
+																			sx={{ ml: 1 }}
+																		/>
+																	)}
+																</TableCell>
 															</TableRow>
 														))}
 													</TableBody>

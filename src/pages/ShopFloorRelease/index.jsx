@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react'; // Import useRef
 import {
 	Breadcrumbs,
 	Typography,
@@ -79,6 +79,21 @@ function DataTableSection({ endpoint }) {
 
 	const { user } = useAuth();
 
+	// Create refs for the text fields
+	const routeSheetInputRef = useRef(null);
+	const machineCodeInputRef = useRef(null);
+
+	// Function to set focus on the Route Sheet input after the component mounts
+	useEffect(() => {
+		if (releaseModalOpen) {
+			setTimeout(() => {
+				if (routeSheetInputRef.current) {
+					routeSheetInputRef.current.focus();
+				}
+			}, 0); // Set timeout to allow modal to render before focusing
+		}
+	}, [releaseModalOpen]);
+
 	const fetchDetails = async (routeSheetNo) => {
 		try {
 			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
@@ -122,6 +137,8 @@ function DataTableSection({ endpoint }) {
 			if (response) {
 				enqueueSnackbar('Production Released Successfully!', { variant: 'success' });
 				setReleaseModalOpen(false);
+				setCheckedRouteSheets([]);
+				setRouteSheetsResponse(null);
 				setMachineCode('');
 				setRouteSheetNo('');
 				setModalData(null);
@@ -177,6 +194,11 @@ function DataTableSection({ endpoint }) {
 				setModalData(null); // Clear any previous data
 			} finally {
 				setFetchLoading(false); // End loading
+			}
+
+			// After processing the route sheet, focus on the machine code input
+			if (machineCodeInputRef.current) {
+				machineCodeInputRef.current.focus();
 			}
 		}
 	}, []);
@@ -568,6 +590,7 @@ function DataTableSection({ endpoint }) {
 								onKeyDown={handleRouteSheetScan}
 								error={!!scanError}
 								helperText={scanError}
+								inputRef={routeSheetInputRef} // Attach the ref
 							/>
 						</Grid>
 						{routeSheetsResponse && routeSheetsResponse.length > 0 && (
@@ -663,9 +686,9 @@ function DataTableSection({ endpoint }) {
 								value={machineCode}
 								onChange={(e) => setMachineCode(e.target.value)}
 								onKeyDown={handleMachineCodeScan}
-								autoFocus
 								error={!!machineCodeError}
 								helperText={machineCodeError}
+								inputRef={machineCodeInputRef} // Attach the ref
 							/>
 						</Grid>
 

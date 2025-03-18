@@ -131,10 +131,11 @@ function DataTableSection({ endpoint }) {
 				return rowDate === filterValue;
 			},
 		},
+		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 90 },
 		{
 			accessorKey: 'routeSheetNo',
-			header: 'Route Sheet',
-			size: 150,
+			header: 'Sheet No',
+			size: 110,
 			Cell: ({ cell }) => (
 				<Button
 					variant="text"
@@ -152,7 +153,7 @@ function DataTableSection({ endpoint }) {
 		{
 			accessorKey: 'isPartial',
 			header: 'Partial',
-			size: 120,
+			size: 100,
 			Cell: ({ row }) => (
 				<Tooltip title={row.original.isPartial === 1 ? 'YES' : 'NO'}>
 					{row.original.isPartial === 1 ? (
@@ -166,7 +167,7 @@ function DataTableSection({ endpoint }) {
 		{
 			accessorKey: 'isCompleted',
 			header: 'Status',
-			size: 130,
+			size: 100,
 			Cell: ({ row }) => (
 				<Tooltip
 					title={
