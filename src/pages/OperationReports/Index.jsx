@@ -47,7 +47,7 @@ function OperationReports() {
 				</Breadcrumbs>
 			</PageHeader>
 			<Box mt={3}>
-				<DataTableSection name="Status Report" endpoint="ProcessingOrders\statusreport" />
+				<DataTableSection name="Status Report" endpoint="Report/statusreport" />
 			</Box>
 		</>
 	);
@@ -100,11 +100,6 @@ function DataTableSection({ endpoint }) {
 
 	const columns = [
 		{
-			header: '#',
-			Cell: ({ row }) => row.index + 1,
-			size: 75,
-		},
-		{
 			accessorKey: 'process_Date',
 			header: 'Date',
 			size: 100,
@@ -131,7 +126,9 @@ function DataTableSection({ endpoint }) {
 				return rowDate === filterValue;
 			},
 		},
-		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 90 },
+		{ accessorKey: 'plantCode', header: 'Project', size: 80 },
+		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 80 },
+		{ accessorKey: 'markNo', header: 'Mark No', size: 120 },
 		{
 			accessorKey: 'routeSheetNo',
 			header: 'Sheet No',
@@ -148,8 +145,8 @@ function DataTableSection({ endpoint }) {
 			),
 		},
 		// { accessorKey: 'subRouteSheetNo', header: 'SubRouteSheetNo ', size: 210 },
-		{ accessorKey: 'totalQunty', header: 'T-Qty', size: 100 },
-		{ accessorKey: 'pendingQunty', header: 'B-Qty', size: 100 },
+		{ accessorKey: 'totalQunty', header: 'TQ', size: 80, enableColumnFilter: false, enableSorting: false },
+		{ accessorKey: 'pendingQunty', header: 'BQ', size: 80, enableColumnFilter: false, enableSorting: false },
 		{
 			accessorKey: 'isPartial',
 			header: 'Partial',

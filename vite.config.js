@@ -12,9 +12,9 @@ export default defineConfig({
 			registerType: 'autoUpdate', // Automatically update the service worker
 			includeAssets: ['logo.png', 'logo.svg'], // Assets to cache
 			manifest: {
-				name: 'WIP Tracking System', // Full name of your app
-				short_name: 'WIP Tracking System', // Short name for the home screen
-				description: 'WIP Tracking System', // Description
+				name: 'Process Capture & Tracking System', // Full name of your app
+				short_name: 'Process Capture & Tracking', // Short name for the home screen
+				description: 'Process Capture & Tracking System', // Description
 				theme_color: '#ffffff', // Theme color for the browser UI
 				background_color: '#ffffff', // Background color during load
 				display: 'standalone', // Makes it look like a native app

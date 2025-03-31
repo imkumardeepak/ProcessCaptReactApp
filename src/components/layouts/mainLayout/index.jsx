@@ -42,9 +42,7 @@ function MainLayout({ container = 'lg', pb = true }) {
 			}}
 		>
 			<Header />
-			<Container
-				maxWidth={container}
-				component="main"
+			<Box
 				sx={{
 					flex: '1 0 auto',
 					width: '100%', // Take up full width
@@ -61,9 +59,9 @@ function MainLayout({ container = 'lg', pb = true }) {
 				) : (
 					<Outlet />
 				)}
-			</Container>
+			</Box>
 			{withScrollTopFabButton(FabButton)}
-			{/* <Footer /> */}
+			<Footer />
 		</Box>
 	);
 }

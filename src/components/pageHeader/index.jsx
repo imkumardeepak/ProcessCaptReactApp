@@ -5,7 +5,7 @@ function PageHeader({ children, title, sx = {} }) {
 	return (
 		<Stack
 			component="header"
-			my={3}
+			my={1}
 			direction="row"
 			justifyContent="space-between"
 			alignItems="center"

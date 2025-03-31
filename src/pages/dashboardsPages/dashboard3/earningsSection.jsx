@@ -13,7 +13,7 @@ import getColors from '@/utils/helpers/getDefaultChartsColors';
 
 function EarningsSection() {
 	const { fetchData } = useApi();
-	const { data: usersData, isLoading, error } = useData('Count', () => fetchData('ProcessingOrders/iscompleted'));
+	const { data: usersData, isLoading, error } = useData('Count', () => fetchData('Home/iscompleted'));
 
 	const [pendingCount, setPendingCount] = useState(0);
 	const [completedCount, setCompletedCount] = useState(0);
@@ -30,8 +30,8 @@ function EarningsSection() {
 	const colors = getColors(colorType);
 
 	const chartData = [
-		{ label: 'Pending', value: pendingCount, color: colors[0] }, // Color from palette
-		{ label: 'Completed', value: completedCount, color: colors[1] }, // Color from palette
+		{ label: 'Pending', value: pendingCount, color: '#006BFF' }, // Color from palette
+		{ label: 'Completed', value: completedCount, color: '#EFB036' }, // Color from palette
 	];
 
 	return (

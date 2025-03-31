@@ -23,6 +23,11 @@ const DesignationMaster = withLazyLoadably(lazy(() => import('@/pages/Designatio
 const PlantDetails = withLazyLoadably(lazy(() => import('@/pages/PlantDetails/index')));
 const PlanningRelease = withLazyLoadably(lazy(() => import('@/pages/PlanningRelease/index')));
 const StatusReport = withLazyLoadably(lazy(() => import('@/pages/StatusReport/Index')));
+const RouteSheetSummaryReport = withLazyLoadably(lazy(() => import('@/pages/RouteSheetSummaryReport/Index')));
+const GalvaReport = withLazyLoadably(lazy(() => import('@/pages/GalvaReport/Index')));
+const CycleTimeReports = withLazyLoadably(lazy(() => import('@/pages/CycleTimeReports/Index')));
+const PlanningReport = withLazyLoadably(lazy(() => import('@/pages/PlanningReport/Index')));
+const ProjectWiseReport = withLazyLoadably(lazy(() => import('@/pages/ProjectWiseReport/Index')));
 const OperationReports = withLazyLoadably(lazy(() => import('@/pages/OperationReports/Index')));
 const ShopFloorRelease = withLazyLoadably(lazy(() => import('@/pages/ShopFloorRelease/index')));
 const UserManagement = withLazyLoadably(lazy(() => import('@/pages/UserManage/index')));
@@ -257,6 +262,46 @@ function Router() {
 										// ]}
 										>
 											<OperationReports />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="cycletimereports"
+									element={
+										<ProtectedRoute>
+											<CycleTimeReports />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="planningreport"
+									element={
+										<ProtectedRoute>
+											<PlanningReport />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="projectwise"
+									element={
+										<ProtectedRoute>
+											<ProjectWiseReport />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="routesheetsummaryreport"
+									element={
+										<ProtectedRoute>
+											<RouteSheetSummaryReport />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="galvaReport"
+									element={
+										<ProtectedRoute>
+											<GalvaReport />
 										</ProtectedRoute>
 									}
 								/>

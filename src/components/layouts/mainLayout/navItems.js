@@ -105,6 +105,26 @@ const NAV_LINKS_CONFIG = [
 				title: 'Operation Reports',
 				href: '/pages/operationreports',
 			},
+			{
+				title: 'Routesheet Pending Report',
+				href: '/pages/routesheetsummaryreport',
+			},
+			{
+				title: 'Routesheet Cycle Reports',
+				href: '/pages/cycletimereports',
+			},
+			{
+				title: 'Project Summary Report',
+				href: '/pages/projectwise',
+			},
+			{
+				title: 'Planning Summary Report',
+				href: '/pages/planningreport',
+			},
+			{
+				title: 'Galva Report',
+				href: '/pages/galvaReport',
+			},
 		],
 	},
 	{

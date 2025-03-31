@@ -44,6 +44,11 @@ import { useForm } from 'react-hook-form';
 import { isNaN } from 'formik';
 import { useApi } from '@/services/machineAPIService';
 import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
+import { ImFileExcel, ImFilePdf } from 'react-icons/im';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import ExcelJS from 'exceljs';
+import useData from '@/utils/hooks/useData';
 
 function ProductionRelease() {
 	return (
@@ -63,28 +68,7 @@ function ProductionRelease() {
 
 function DataTableSection({ endpoint }) {
 	const { fetchData, createResource } = useApi();
-	const [data, setData] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState(null);
-
-	const refetch = async () => {
-		setIsLoading(true);
-		try {
-			const fetchedData = await fetchData(endpoint);
-			const filteredData = fetchedData.filter((item) => item.readflag === 0);
-			setData(filteredData);
-			setError(null);
-		} catch (err) {
-			setError(err);
-			setData([]);
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		refetch();
-	}, [endpoint]);
+	const { data, isLoading, error, refetch } = useData(endpoint, () => fetchData(endpoint));
 
 	const [rowSelection, setRowSelection] = useState([]);
 	const [modalOpen, setModalOpen] = useState(false);
@@ -174,7 +158,6 @@ function DataTableSection({ endpoint }) {
 
 	const handleSubmitApi = async () => {
 		setIsSubmitting(true);
-		setError(null);
 
 		try {
 			// Create object for pass on list
@@ -226,7 +209,7 @@ function DataTableSection({ endpoint }) {
 			refetch();
 		} catch (apiError) {
 			console.error('Error submitting data:', apiError);
-			setError('Failed to submit data. Please try again.');
+			enqueueSnackbar('Failed to submit data. Please try again.', { variant: 'error' });
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -239,6 +222,134 @@ function DataTableSection({ endpoint }) {
 				.filter(Boolean),
 		[rowSelection, data],
 	);
+
+	const handleExportExcelWithTheme = (rows) => {
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('Sheet 1');
+
+		const headers = Object.keys(rows[0].original).map((header) => header.toUpperCase());
+		const headerRow = worksheet.addRow(headers);
+
+		headerRow.eachCell((cell) => {
+			cell.font = {
+				name: 'Calibri',
+				bold: true,
+				size: 12,
+			};
+			cell.fill = {
+				type: 'pattern',
+				pattern: 'solid',
+				fgColor: { argb: 'AAB99A' },
+			};
+			cell.alignment = {
+				vertical: 'middle',
+				horizontal: 'center',
+			};
+			cell.border = {
+				top: { style: 'thin' },
+				left: { style: 'thin' },
+				bottom: { style: 'thin' },
+				right: { style: 'thin' },
+			};
+		});
+
+		rows.forEach((row) => {
+			const dataRow = worksheet.addRow(Object.values(row.original));
+			console.log(dataRow);
+			dataRow.eachCell((cell) => {
+				cell.font = {
+					name: 'Calibri',
+					size: 11,
+				};
+				cell.alignment = {
+					vertical: 'middle',
+					horizontal: 'left',
+				};
+				cell.border = {
+					top: { style: 'thin' },
+					left: { style: 'thin' },
+					bottom: { style: 'thin' },
+					right: { style: 'thin' },
+				};
+			});
+		});
+
+		worksheet.columns.forEach((column) => {
+			let maxLength = 0;
+			column.eachCell({ includeEmpty: true }, (cell) => {
+				const cellValue = cell.value || '';
+				maxLength = Math.max(maxLength, cellValue.toString().length);
+			});
+			column.width = maxLength + 2;
+		});
+
+		workbook.xlsx.writeBuffer().then((buffer) => {
+			const blob = new Blob([buffer], {
+				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			});
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = 'export.xlsx';
+			link.click();
+		});
+	};
+
+	const handleExportPdf = (rows) => {
+		const doc = new jsPDF({
+			orientation: 'landscape',
+			format: 'a3',
+		});
+
+		const title = 'Production Release Data Export';
+		doc.setFont('Helvetica', 'bold');
+		doc.setFontSize(18);
+		doc.text(title, 14, 20);
+
+		const headers = Object.keys(rows[0].original).map((header) => header.toUpperCase());
+		const tableData = rows.map((row) => Object.values(row.original));
+
+		autoTable(doc, {
+			head: [headers],
+			body: tableData,
+			startY: 30,
+			styles: {
+				font: 'Helvetica',
+				fontSize: 10,
+				halign: 'center',
+				valign: 'middle',
+			},
+			headStyles: {
+				fillColor: [63, 81, 181],
+				textColor: [255, 255, 255],
+				fontSize: 12,
+				halign: 'center',
+				bold: true,
+			},
+			alternateRowStyles: {
+				fillColor: [245, 245, 245],
+			},
+			bodyStyles: {
+				textColor: [0, 0, 0],
+			},
+			columnStyles: {
+				0: { halign: 'left' },
+			},
+			margin: { top: 30, bottom: 20, left: 14, right: 14 },
+		});
+
+		const pageCount = doc.getNumberOfPages();
+		for (let i = 1; i <= pageCount; i++) {
+			doc.setPage(i);
+			doc.setFont('Helvetica', 'normal');
+			doc.setFontSize(10);
+			const footerText = `Page ${i} of ${pageCount}`;
+			doc.text(footerText, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, {
+				align: 'right',
+			});
+		}
+
+		doc.save('export.pdf');
+	};
 
 	const handleAddClick = () => {
 		// Get total quantity in the following format
@@ -268,14 +379,9 @@ function DataTableSection({ endpoint }) {
 
 	const columns = [
 		{
-			header: '#',
-			Cell: ({ row }) => row.index + 1,
-			size: 20,
-		},
-		{
 			accessorKey: 'read_Date',
 			header: 'Date',
-			size: 50,
+			size: 100,
 			Cell: ({ cell }) => dayjs(cell.getValue()).format('YYYY-MM-DD'),
 			Filter: ({ column }) => {
 				const [selectedDate, setSelectedDate] = useState(null);
@@ -299,11 +405,12 @@ function DataTableSection({ endpoint }) {
 				return rowDate === filterValue;
 			},
 		},
-		{ accessorKey: 'cuttingInstruction', header: 'Cutting  No', size: 20 },
+		{ accessorKey: 'plantcode', header: 'Project Code', size: 100 },
+		{ accessorKey: 'cuttingInstruction', header: 'Cutting  No', size: 100 },
 		{
 			accessorKey: 'routeSheetNo',
 			header: 'Route Sheet',
-			size: 60,
+			size: 120,
 			Cell: ({ cell, row }) => {
 				const [open, setOpen] = useState(false);
 				const handleOpen = () => setOpen(true);
@@ -461,13 +568,14 @@ function DataTableSection({ endpoint }) {
 				);
 			},
 		},
-		{ accessorKey: 'workOrderNo', header: 'Work Order No', size: 20 },
-		{ accessorKey: 'pendingQnty', header: 'Pending', size: 10 },
-		{ accessorKey: 'totalQunty', header: 'Total', size: 10 },
+		{ accessorKey: 'markNo', header: 'Mark No', size: 180 },
+		{ accessorKey: 'workOrderNo', header: 'Work Order No', size: 150 },
+		{ accessorKey: 'pendingQnty', header: 'Pending', size: 120 },
+		{ accessorKey: 'totalQunty', header: 'Total', size: 120 },
 		{
 			accessorKey: 'isPartial',
 			header: 'isPartial',
-			size: 20,
+			size: 120,
 			Cell: ({ row }) => (
 				<Tooltip title={row.original.isPartial === 1 ? 'YES' : 'NO'}>
 					{row.original.isPartial === 1 ? (
@@ -500,21 +608,6 @@ function DataTableSection({ endpoint }) {
 				return row.getValue(columnId) === filterValue;
 			},
 		},
-
-		// {
-		// 	accessorKey: 'readflag',
-		// 	header: 'Status',
-		// 	size: 100,
-		// 	Cell: ({ row }) => (
-		// 		<Tooltip title={row.original.readflag === 0 ? 'Open' : 'Hold'}>
-		// 			{row.original.readflag === 0 ? (
-		// 				<Chip label="Open" color="success" size="small" icon={<InfoOutlined />} />
-		// 			) : (
-		// 				<Chip label="Hold" color="warning" size="small" icon={<InfoOutlined />} />
-		// 			)}
-		// 		</Tooltip>
-		// 	),
-		// },
 	];
 
 	const table = useMaterialReactTable({
@@ -525,6 +618,8 @@ function DataTableSection({ endpoint }) {
 			pagination: { pageSize: 100, pageIndex: 0 },
 		},
 		enableRowSelection: true,
+		enableColumnResizing: true,
+		enableRowNumbers: true,
 		onRowSelectionChange: setRowSelection, // This handles both selection and deselection
 		state: {
 			rowSelection, // Pass the row selection state back to the table
@@ -533,7 +628,28 @@ function DataTableSection({ endpoint }) {
 		getRowId: (originalRow) => originalRow.routeSheetNo,
 		enableStickyHeader: true,
 		paginationDisplayMode: 'pages',
+		renderTopToolbarCustomActions: ({ table }) => (
+			<Box sx={{ display: 'flex', gap: '1rem', p: '8px', alignItems: 'center' }}>
+				<Button
+					color="success"
+					onClick={() => handleExportExcelWithTheme(table.getPrePaginationRowModel().rows)}
+					startIcon={<ImFileExcel />}
+					variant="text"
+				>
+					Export to Excel
+				</Button>
+				<Button
+					color="error"
+					onClick={() => handleExportPdf(table.getPrePaginationRowModel().rows)}
+					startIcon={<ImFilePdf />}
+					variant="text"
+				>
+					Export to PDF
+				</Button>
+			</Box>
+		),
 	});
+
 	const globalTheme = useTheme();
 
 	const tableTheme = useMemo(
@@ -568,7 +684,7 @@ function DataTableSection({ endpoint }) {
 					MuiTableRow: {
 						styleOverrides: {
 							root: {
-								height: 30, // Adjust row height
+								height: 45, // Adjust row height
 								padding: 0, // Remove padding
 							},
 						},
@@ -629,15 +745,7 @@ function DataTableSection({ endpoint }) {
 			</Box>
 			<Box>
 				<ThemeProvider theme={tableTheme}>
-					<MaterialReactTable
-						table={table}
-						sx={{
-							'& .MuiPaper-root': {
-								backgroundColor: '#fff', // Final fallback
-								boxShadow: 'none',
-							},
-						}}
-					/>
+					<MaterialReactTable table={table} />
 				</ThemeProvider>
 			</Box>
 

@@ -66,7 +66,7 @@ function SuggestedPeople() {
 					},
 				}}
 			>
-				{displayData.slice(0, 6).map((user) => (
+				{displayData.slice(0, 5).map((user) => (
 					<UserListItem key={user.id} user={user} />
 				))}
 			</List>
@@ -88,7 +88,7 @@ function UserListItem({ user }) {
 			<ListItemButton>
 				<ListItemAvatar>
 					{avatarImg ? (
-						<Avatar alt={name} src={avtar} /> // Display image if available
+						<Avatar alt={name} src={avatarImg} /> // Display image if available
 					) : (
 						generateAvatar(name) // Generate avatar if no image
 					)}

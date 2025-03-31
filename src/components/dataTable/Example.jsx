@@ -11,7 +11,6 @@ import { mkConfig } from 'export-to-csv';
 function DataTable({ columns, data }) {
 	const globalTheme = useTheme();
 
-	// Create a custom table theme, inheriting global theme properties
 	const tableTheme = useMemo(
 		() =>
 			createTheme({
@@ -22,57 +21,44 @@ function DataTable({ columns, data }) {
 						main: '#006BFF', // Custom color for alerts, if applicable
 					},
 					background: {
-						default:
-							globalTheme.palette.mode === 'light'
-								? 'rgb(254,255,255)' // Light background in light mode
-								: '#000', // Dark background in dark mode
+						default: '#fff', // Force white background
+						paper: '#fff', // Force white background for paper components
 					},
-				},
-				typography: {
-					button: {
-						textTransform: 'none', // Keep button text as it is
-						fontSize: '1rem', // Slightly larger font size for table buttons
-					},
-				},
-				enableColumnFilterModes: true,
-				enableColumnOrdering: true,
-				enableGrouping: true,
-				enableColumnPinning: true,
-				enableFacetedValues: true,
-				enableRowActions: true,
-				enableRowSelection: true,
-				initialState: {
-					showColumnFilters: true,
-					showGlobalFilter: true,
-					columnPinning: {
-						left: ['mrt-row-expand', 'mrt-row-select'],
-						right: ['mrt-row-actions'],
-					},
-				},
-				paginationDisplayMode: 'pages',
-				positionToolbarAlertBanner: 'bottom',
-				muiSearchTextFieldProps: {
-					size: 'small',
-					variant: 'outlined',
-				},
-				muiPaginationProps: {
-					color: 'secondary',
-					rowsPerPageOptions: [10, 20, 30],
-					shape: 'rounded',
-					variant: 'outlined',
 				},
 				components: {
+					MuiPaper: {
+						styleOverrides: {
+							root: {
+								backgroundColor: '#fff', // Force white for Paper components
+							},
+						},
+					},
 					MuiTooltip: {
 						styleOverrides: {
 							tooltip: {
-								fontSize: '0.875rem', // Adjust tooltip font size
+								fontSize: '1rem', // Override tooltip font size
+							},
+						},
+					},
+					MuiTableRow: {
+						styleOverrides: {
+							root: {
+								height: 45, // Adjust row height
+								padding: 0, // Remove padding
+							},
+						},
+					},
+					MuiTableCell: {
+						styleOverrides: {
+							root: {
+								padding: 4, // Adjust cell padding
 							},
 						},
 					},
 					MuiSwitch: {
 						styleOverrides: {
 							thumb: {
-								color: '#ff4081', // Example: change switch thumb color
+								color: globalTheme.palette.primary.main, // Change switch thumb color
 							},
 						},
 					},
@@ -240,13 +226,14 @@ function DataTable({ columns, data }) {
 					// enableRowNumbers={true}
 					// rowNumberDisplayMode="static"
 					initialState={{
-						pagination: { pageSize: 5, pageIndex: 0 },
+						pagination: { pageSize: 10, pageIndex: 0 },
 						density: 'compact',
 					}}
 					enableSorting
 					enableColumnResizing
 					enableGlobalFilter
 					enableGrouping
+					enableRowNumbers
 					enableBottomToolbar
 					enableStickyHeader
 					enableStickyFooter

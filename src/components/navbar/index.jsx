@@ -9,9 +9,9 @@ function Navbar({ navItems, position = 'sticky' }) {
 	return (
 		<AppBar position={position} elevation={26} sx={{ borderLeft: 0, borderRight: 0 }}>
 			<Box bgcolor="background.paper" py={2}>
-				<Container maxWidth="lg">
+				<Box sx={{ mx: '1rem' }}>
 					<NavLinks navItems={navItems} />
-				</Container>
+				</Box>
 			</Box>
 		</AppBar>
 	);

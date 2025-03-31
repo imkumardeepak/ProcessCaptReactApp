@@ -18,7 +18,7 @@ function Footer() {
 			<Container maxWidth="lg" component={Stack} direction="column" spacing={4}>
 				<Stack direction={{ lg: 'row' }} justifyContent="space-between" alignItems="center" flexWrap="wrap">
 					<Typography variant="body2" textAlign="center">
-						Copyright 2024 © Aarkay Techno Consultants Pvt. Ltd.
+						Copyright @{new Date().getFullYear()} Aarkay Techno Consultants Pvt. Ltd.
 					</Typography>
 				</Stack>
 			</Container>

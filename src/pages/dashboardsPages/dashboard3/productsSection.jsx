@@ -7,46 +7,39 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import ButtonGroup from '@mui/material/ButtonGroup';
-
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 import CardHeader from '@/components/cardHeader';
 
-import processimage from '@/assets/images/products/Manufacturingprocess.png';
 import { useApi } from '@/services/machineAPIService';
 import useData from '@/utils/hooks/useData';
+import { CardActions, Chip } from '@mui/material';
 
 function ProductsSection() {
 	return (
 		<Card type="none">
 			<Stack direction="column">
 				<CardHeader
-					title="Production Orders"
-					size="small"
+					title="Project Details"
+					size="medium"
 					sx={{
-						m: 2,
+						mx: 2,
+						my: 1,
+						pt: 1,
 					}}
-				>
-					<ButtonGroup variant="outlined" size="small" aria-label="temporaly button group">
-						{['Today'].map((tab, i) => (
-							<Button
-								key={i}
-								variant={tab === 'Today' ? 'outlined' : 'outlined'}
-								sx={{
-									...(tab === 'Today' && {
-										outline: (theme) => `0.5px solid ${theme.palette.primary.main}`,
-									}),
-								}}
-							>
-								{tab}
-							</Button>
-						))}
-					</ButtonGroup>
-				</CardHeader>
+				/>
 				<ProductsTable />
+				<CardActions sx={{ justifyContent: 'space-between', width: '100%', my: 1, mx: 1 }}>
+					<Stack direction="row" spacing={1} sx={{ flexGrow: 1 }}>
+						<Typography variant="body2" color="text.secondary">
+							Last Updated Date :{' '}
+							{new Date().toLocaleDateString('en-GB', {
+								day: '2-digit',
+								month: '2-digit',
+								year: 'numeric',
+							})}
+						</Typography>
+					</Stack>
+				</CardActions>
 			</Stack>
 		</Card>
 	);
@@ -54,7 +47,7 @@ function ProductsSection() {
 
 function ProductsTable() {
 	const { fetchData } = useApi();
-	const { data: usersData, isLoading, error } = useData('ProductionOrders', () => fetchData('ProductionOrders'));
+	const { data: usersData, isLoading, error } = useData('summaryreport', () => fetchData('Report/summaryreport'));
 
 	if (isLoading) {
 		return <Typography>Loading...</Typography>;
@@ -65,20 +58,22 @@ function ProductsTable() {
 	}
 
 	const top10Data = usersData ? usersData.slice(0, 5) : [];
-
+	console.log(top10Data);
 	return (
 		<TableContainer>
 			<Table aria-label="production orders table" size="medium">
 				<TableHead>
 					<TableRow>
 						<TableCell>#</TableCell>
-						<TableCell align="left">Route Sheet No</TableCell>
-						<TableCell align="left">Mark No</TableCell>
-						<TableCell align="left">Section Code</TableCell>
-						<TableCell align="right">Length</TableCell>
-						<TableCell align="right">Width</TableCell>
-						<TableCell align="right">Total Quantity</TableCell>
-						<TableCell align="center">Actions</TableCell>
+						<TableCell align="center">Date</TableCell>
+						<TableCell align="center">Project</TableCell>
+						<TableCell align="center">Total Quantity</TableCell>
+						<TableCell align="center">Total Weight</TableCell>
+						<TableCell align="center">RFI</TableCell>
+						<TableCell align="center">RFG</TableCell>
+						<TableCell align="center">QCG</TableCell>
+						<TableCell align="center">RFD</TableCell>
+						<TableCell align="center">Pending</TableCell>
 					</TableRow>
 				</TableHead>
 				<TableBody>
@@ -92,7 +87,8 @@ function ProductsTable() {
 }
 
 function ProductsTableRow({ purchase, index }) {
-	const { routeSheetNo, markNo, sectionCode, length, width, totalQunty } = purchase;
+	const { date, plantcode, totalQnty, totalWeight, checkedRFI, checkedRFG, checkedQCG, checkedRFD, status } =
+		purchase;
 	const serialNumber = index + 1; // Calculate serial number
 
 	return (
@@ -102,40 +98,60 @@ function ProductsTableRow({ purchase, index }) {
 					{serialNumber}
 				</Typography>
 			</TableCell>
-			<TableCell align="left">
+			<TableCell align="center">
 				<Typography variant="subtitle2" color="text.primary">
-					{routeSheetNo}
-				</Typography>
-			</TableCell>
-			<TableCell align="left">
-				<Typography variant="body2" color="text.secondary">
-					{markNo}
-				</Typography>
-			</TableCell>
-			<TableCell align="left">
-				<Typography variant="body2" color="text.secondary">
-					{sectionCode}
-				</Typography>
-			</TableCell>
-			<TableCell align="right">
-				<Typography variant="body2" color="text.secondary">
-					{length}
-				</Typography>
-			</TableCell>
-			<TableCell align="right">
-				<Typography variant="body2" color="text.secondary">
-					{width}
-				</Typography>
-			</TableCell>
-			<TableCell align="right">
-				<Typography variant="body2" color="text.secondary">
-					{totalQunty}
+					{new Date(date).toLocaleDateString('en-GB', {
+						day: '2-digit',
+						month: '2-digit',
+						year: 'numeric',
+					})}
 				</Typography>
 			</TableCell>
 			<TableCell align="center">
-				<IconButton size="small">
-					<MoreHorizIcon fontSize="small" />
-				</IconButton>
+				<Typography variant="body2" color="text.secondary">
+					{plantcode}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					<Chip label={totalQnty} color="success" size="small" />
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{totalWeight}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{checkedRFI}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{checkedRFG}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{checkedQCG}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{checkedRFD}
+				</Typography>
+			</TableCell>
+			<TableCell align="center">
+				<Typography variant="body2" color="text.secondary">
+					{status === 0 ? (
+						<Chip label={status} color="success" size="small" />
+					) : status === null ? (
+						<Chip label={totalQnty} color="error" size="small" />
+					) : (
+						<Chip label={status} color="error" size="small" />
+					)}
+				</Typography>
 			</TableCell>
 		</TableRow>
 	);

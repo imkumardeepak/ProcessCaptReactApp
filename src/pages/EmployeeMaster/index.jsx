@@ -141,7 +141,6 @@ function DataTableSection({ endpoint }) {
 
 	// Table Columns
 	const columns = [
-		// { accessorKey: 'empCode', header: 'Employee Code' },
 		{ accessorKey: 'empName', header: 'Employee Name' },
 		{ accessorKey: 'designation', header: 'Designation' },
 		// { accessorKey: 'empMobile', header: 'Mobile Number' },

@@ -100,7 +100,6 @@ function DataTableSection({ endpoint }) {
 
 	// Table Columns
 	const columns = [
-		{ accessorKey: 'id', header: 'Id', size: 220 },
 		{ accessorKey: 'compcode', header: 'Company Code', size: 300 },
 		{ accessorKey: 'plantcode', header: 'Plant Code', size: 200 },
 		{

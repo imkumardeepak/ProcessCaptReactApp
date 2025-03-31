@@ -181,10 +181,13 @@ function DespatchedForm() {
 				if (!response || response.message === 'Employee not found.') {
 					enqueueSnackbar('Employee not found.', { variant: 'error' });
 					setPersonQRCode('');
-				} else {
+				} else if (response.designation.includes('RFD')) {
 					enqueueSnackbar('Employee Found.', { variant: 'success' });
 					setEmployeeDetails(response);
 					console.log(response);
+				} else {
+					enqueueSnackbar('Employee designation must be RFD.', { variant: 'error' });
+					setPersonQRCode('');
 				}
 			} catch (ex) {
 				if (ex.response && ex.response.status === 404) {
@@ -317,12 +320,21 @@ function DespatchedForm() {
 				)}
 
 				{noWorkingDetails && !loading && (
-					<Alert severity="warning">No operations available for the current process.</Alert>
+					<Alert variant="filled" severity="warning">
+						No operations available for the current process.
+					</Alert>
 				)}
 
 				{!loading && details && !showInspectionStack && !noWorkingDetails && (
 					<>
-						<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+						<Box
+							sx={{
+								display: 'grid',
+								gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, // 1 column on mobile, 2 columns on larger screens
+								gap: 2,
+								mb: 2,
+							}}
+						>
 							<TextField
 								label="Quantity"
 								variant="outlined"

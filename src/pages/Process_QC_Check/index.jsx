@@ -101,7 +101,7 @@ function QCCheckForm() {
 	};
 
 	const handleCheckQuantityChange = (e) => {
-		const value = e.target.value;
+		const { value } = e.target;
 
 		if (!/^\d*$/.test(value)) {
 			return;
@@ -146,14 +146,18 @@ function QCCheckForm() {
 				setAllProductionDetails(null);
 				setNoWorkingDetails(true);
 				enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
+				setTimeout(() => {
+					if (routeSheetRef.current) {
+						routeSheetRef.current.focus();
+					}
+				}, 100);
 			} else {
 				setAllProductionDetails(response);
 				const filteredDetails = response.details.filter(
 					(detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0,
-					(detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0,
 				);
 				setDetails({ ...response, details: filteredDetails });
-				setCheckQuantity(filteredDetails[0]?.totalQunty || 0);
+				setCheckQuantity(filteredDetails[0].totalQunty || 0);
 				setEmployeeDetails(null);
 				setMachineDetails(null);
 				setnextMachineDetails(null);
@@ -162,18 +166,25 @@ function QCCheckForm() {
 				const hasInspectionCodes = filteredDetails.some((detail) =>
 					['R', 'G', 'RFD'].includes(detail.operation_Code),
 				);
+				console.log('hasInspectionCodes', hasInspectionCodes);
 				if (hasInspectionCodes) {
+					console.log('Inspection codes found for this route sheet.');
 					setDetails(null);
 					setCheckQuantity(0);
 					setMachineQRCode('');
 					setEmployeeDetails(null);
 					setProductionDetails(null);
 					setnextMachineDetails(null);
-					setRouteSheetNo('');
 					setMachineDetails(null);
 					setShowInspectionStack(false);
 					setNoWorkingDetails(true);
 					setLoading(false);
+					setRouteSheetNo('');
+					setTimeout(() => {
+						if (routeSheetRef.current) {
+							routeSheetRef.current.focus();
+						}
+					}, 100);
 					enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
 					return;
 				}
@@ -198,18 +209,6 @@ function QCCheckForm() {
 		}
 	};
 
-	useEffect(() => {
-		if (details === null) {
-			setNoWorkingDetails(false);
-			return;
-		}
-		if (details?.details && details.details.length === 0) {
-			setNoWorkingDetails(true);
-		} else {
-			setNoWorkingDetails(false);
-		}
-	}, [details]);
-
 	const handleKeyDown = (e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
@@ -227,7 +226,8 @@ function QCCheckForm() {
 				if (!response || response.message === 'Employee not found.') {
 					enqueueSnackbar('Employee not found.', { variant: 'error' });
 					setPersonQRCode('');
-				} else {
+				} else if (response.designation.includes('PROCESS')) {
+					enqueueSnackbar('Employee found.', { variant: 'success' });
 					setEmployeeDetails(response);
 					console.log(response);
 					setTimeout(() => {
@@ -235,6 +235,9 @@ function QCCheckForm() {
 							nextMachineQRRef.current.focus();
 						}
 					}, 100);
+				} else {
+					enqueueSnackbar('Employee designation must be PROCESSCAPT.', { variant: 'error' });
+					setPersonQRCode('');
 				}
 			} catch (ex) {
 				if (ex.response && ex.response.status === 404) {
@@ -264,24 +267,27 @@ function QCCheckForm() {
 					console.log(response);
 					setMachineDetails(response);
 					const machineOperationCodes = response.operationCode.split(', ').map((code) => code.trim());
-
+					console.log('details.details', details.details);
 					// Filter to keep ONLY matching operations
 					const matchingOperations = details.details.filter((detail) =>
 						machineOperationCodes.includes(detail.operation_Code),
 					);
-					setCheckQuantity(matchingOperations[0]?.totalQunty || 0);
 					console.log('matchingOperations', matchingOperations);
-					// Update state with filtered operations
-					setDetails((prev) => ({ ...prev, details: matchingOperations }));
 
 					// Check if any matching operations exist
-					const hasMatchingOperation = matchingOperations.length > 0;
-					if (!hasMatchingOperation) {
+					const hasNoMatchingOperation = matchingOperations.length > 0;
+					if (!hasNoMatchingOperation) {
 						enqueueSnackbar('No matching operation code found for this machine.', { variant: 'error' });
 						setMachineQRCode(''); // Clear the machine field
 						setMachineDetails(null); // Optionally reset machine details
+						setTimeout(() => {
+							if (machineQRRef.current) {
+								machineQRRef.current.focus();
+							}
+						}, 100);
 						return;
 					}
+					setDetails((prev) => ({ ...prev, details: matchingOperations }));
 					try {
 						const result = await fetchData(`ProductionOrders/${routeSheetNo}`);
 						const filteredResponse = { ...result };
@@ -388,7 +394,9 @@ function QCCheckForm() {
 						enqueueSnackbar('No matching operation code found for this machine.', { variant: 'error' });
 						setNextMachineQRCode(''); // Clear the machine field
 						setnextMachineDetails(null); // Optionally reset machine details
+						return;
 					}
+					enqueueSnackbar('Machine found.', { variant: 'success' });
 				}
 			} catch (ex) {
 				if (ex.response && ex.response.status === 404) {
@@ -606,7 +614,9 @@ function QCCheckForm() {
 				)}
 
 				{noWorkingDetails && !loading && (
-					<Alert severity="warning">No operations available for the current process.</Alert>
+					<Alert variant="filled" severity="warning">
+						No operations available for the current route sheet {routeSheetNo}
+					</Alert>
 				)}
 
 				{!loading && details && !showInspectionStack && !noWorkingDetails && (

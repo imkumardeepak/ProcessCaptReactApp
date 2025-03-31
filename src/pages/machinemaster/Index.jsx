@@ -153,7 +153,6 @@ function DataTableSection({ name, endpoint }) {
 	}
 
 	const columns = [
-		{ accessorKey: 'id', header: 'ID', size: 100 },
 		{ accessorKey: 'machineID', header: 'Machine ID', size: 150 },
 		{ accessorKey: 'machineCode', header: 'Machine Code', size: 150 },
 		{ accessorKey: 'operation', header: 'Operation', size: 300 },

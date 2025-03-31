@@ -290,26 +290,18 @@ function DataTableSection({ endpoint }) {
 
 	const columns = [
 		{
-			header: '#',
-			Cell: ({ row }) => row.index + 1,
-			size: 50,
-			enableGrouping: false, // Disable grouping for this column
-		},
-		{
 			accessorKey: 'read_Date',
 			header: 'Date',
 			size: 100,
 			Cell: ({ cell }) => dayjs(cell.getValue()).format('YYYY-MM-DD'),
 		},
-		{
-			accessorKey: 'cuttingInstruction',
-			header: 'Cutting Instruction',
-			size: 120,
-		},
+		{ accessorKey: 'plantcode', header: 'Plant Code', size: 100 },
+		{ accessorKey: 'cuttingInstruction', header: 'Cutting  No', size: 100 },
+		{ accessorKey: 'markNo', header: 'Mark No', size: 190 },
 		{
 			accessorKey: 'routeSheetNo',
 			header: 'Route Sheet',
-			size: 150,
+			size: 130,
 			Cell: ({ cell }) => (
 				<Button
 					variant="text"
@@ -321,8 +313,8 @@ function DataTableSection({ endpoint }) {
 				</Button>
 			),
 		},
-		{ accessorKey: 'subRouteSheetNo', header: 'Sub RouteSheet No', size: 210 },
-		{ accessorKey: 'totalQunty', header: 'Total Qty', size: 150 },
+		{ accessorKey: 'subRouteSheetNo', header: 'Sub RouteSheet No', size: 150 },
+		{ accessorKey: 'totalQunty', header: 'Total Qty', size: 100 },
 		{
 			accessorKey: 'statusflag',
 			header: 'Status',
@@ -691,6 +683,13 @@ function DataTableSection({ endpoint }) {
 								inputRef={machineCodeInputRef} // Attach the ref
 							/>
 						</Grid>
+						{machineDetails && (
+							<Grid item xs={12}>
+								<Alert variant="filled" severity="success">
+									Machine Matched Successfully
+								</Alert>
+							</Grid>
+						)}
 
 						<Grid item xs={12}>
 							<ConfirmButton

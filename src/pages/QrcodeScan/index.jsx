@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
@@ -19,6 +19,16 @@ function QRCodeScanner() {
 	} = useForm();
 	const { login } = useAuth();
 
+	const inputRef = React.useRef(null);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (inputRef.current) {
+				inputRef.current.focus();
+			}
+		}, 50); // Reduced delay for better UX
+		return () => clearTimeout(timer); // Cleanup timer
+	}, []);
 	const handleScan = async (data) => {
 		const { qrCode } = data;
 
@@ -82,11 +92,15 @@ function QRCodeScanner() {
 						<TextField
 							label="QR Code"
 							variant="outlined"
+							inputProps={{
+								onKeyDown: (e) => handleKeyDown(e, handleSubmit(handleScan)),
+							}}
 							fullWidth
 							{...register('qrCode', { required: 'Please enter or scan a QR code.' })}
 							error={!!errors.qrCode}
 							helperText={errors.qrCode?.message}
 							onKeyDown={(e) => handleKeyDown(e, handleSubmit(handleScan))}
+							inputRef={inputRef}
 						/>
 
 						{apierror && <Alert severity="error">{apierror}</Alert>}

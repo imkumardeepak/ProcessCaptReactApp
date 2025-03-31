@@ -105,7 +105,6 @@ function DataTableSection({ endpoint }) {
 
 	// Table Columns
 	const columns = [
-		{ accessorKey: 'id', header: 'ID', size: 200 },
 		{ accessorKey: 'shiftName', header: 'Shift' },
 		{
 			accessorKey: 'startTime',

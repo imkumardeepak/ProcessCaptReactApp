@@ -26,7 +26,7 @@ function Dashboard3() {
 					<Typography color="text.tertiary">Dashboard</Typography>
 				</Breadcrumbs>
 			</PageHeader>
-			<Grid container spacing={2}>
+			<Grid container spacing={2} mt={1}>
 				<Grid item xs={12} sm={12} md={12}>
 					<StatsSection />
 				</Grid>
@@ -42,9 +42,9 @@ function Dashboard3() {
 				<Grid item xs={12} sm={12} md={12}>
 					<ProductsSection />
 				</Grid>
-				<Grid item xs={12} sm={12} md={12}>
+				{/* <Grid item xs={12} sm={12} md={12}>
 					<SalesOverviewCard />
-				</Grid>
+				</Grid> */}
 			</Grid>
 		</>
 	);

@@ -101,7 +101,6 @@ function DataTableSection({ endpoint }) {
 
 	// Table Columns
 	const columns = [
-		{ accessorKey: 'id', header: 'Id', size: 220 },
 		{ accessorKey: 'designationName', header: 'Designation Name', size: 300 },
 		{
 			accessorKey: 'actions',
