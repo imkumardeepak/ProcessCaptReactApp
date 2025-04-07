@@ -68,6 +68,7 @@ function DataTableSection({ endpoint }) {
 	const [releaseModalOpen, setReleaseModalOpen] = useState(false);
 	const [machineCode, setMachineCode] = useState('');
 	const [routeSheetNo, setRouteSheetNo] = useState('');
+	const [totalWeight, setTotalWeight] = useState(null);
 	const [scanError, setScanError] = useState('');
 	const [machineDetails, setMachineDetails] = useState(null);
 	const [routeSheetsResponse, setRouteSheetsResponse] = useState(null);
@@ -217,18 +218,26 @@ function DataTableSection({ endpoint }) {
 
 				setFetchLoading(true);
 				try {
-					const response = await fetchData(`MachineDetails/${scannedMachineCode}`);
-					setMachineDetails(response);
+					const [detailsResponse, loadResponse] = await Promise.all([
+						fetchData(`MachineDetails/${scannedMachineCode}`),
+						fetchData(`Report/GetMachineLoadStatus?MachineNo=${scannedMachineCode}`),
+					]);
+
+					// Set machine details and validate operation codes
+					setMachineDetails(detailsResponse);
+					console.log('loadResponse : ', loadResponse);
+					setTotalWeight(loadResponse[0]?.totalWT || 0);
 					setMachineCodeError('');
 
 					// Check for operation code match, prioritizing the first operation
 					if (modalData && modalData.details) {
-						const machineOperationCodes = response.operationCode;
+						const machineOperationCodes = detailsResponse.operationCode;
 						const firstModalOperationCode = modalData.details[0].operation_Code;
 
 						if (!machineOperationCodes.includes(firstModalOperationCode)) {
 							enqueueSnackbar('No matching operation codes found.', { variant: 'error' });
 							setMachineCode('');
+							setTotalWeight(0);
 							setMachineDetails(null);
 						}
 						enqueueSnackbar('Matching Operation codes found.', { variant: 'success' });
@@ -240,6 +249,7 @@ function DataTableSection({ endpoint }) {
 					});
 					setMachineDetails(null);
 					setMachineCode('');
+					setTotalWeight(0);
 				} finally {
 					setFetchLoading(false);
 				}
@@ -255,6 +265,7 @@ function DataTableSection({ endpoint }) {
 		setRouteSheetNo('');
 		setMachineCode('');
 		setOpen(false);
+		setTotalWeight(0);
 		setRouteSheetsResponse(null);
 		setMachineDetails(null); // Clear machine details
 		setMachineCodeError('');
@@ -363,16 +374,6 @@ function DataTableSection({ endpoint }) {
 			</Box>
 		);
 	}
-
-	const getTableCellStyles = (operationCode, machineDetails) => {
-		const baseStyle = {};
-
-		if (machineDetails && machineDetails.operationCode && machineDetails.operationCode.includes(operationCode)) {
-			return { ...baseStyle, backgroundColor: 'yellow' }; // Highlight color
-		}
-
-		return baseStyle;
-	};
 
 	return (
 		<>
@@ -619,7 +620,7 @@ function DataTableSection({ endpoint }) {
 										</Box>
 									</Box>
 
-									<TableContainer sx={{ maxHeight: 300 }}>
+									<TableContainer sx={{ maxHeight: 250 }}>
 										<Table size="small" stickyHeader>
 											<TableHead>
 												<TableRow>
@@ -670,7 +671,7 @@ function DataTableSection({ endpoint }) {
 							</Grid>
 						)}
 
-						<Grid item xs={12}>
+						<Grid item xs={8}>
 							<TextField
 								fullWidth
 								label="Scan Machine Code"
@@ -683,6 +684,26 @@ function DataTableSection({ endpoint }) {
 								inputRef={machineCodeInputRef} // Attach the ref
 							/>
 						</Grid>
+						<Grid
+							item
+							xs={4}
+							sx={{
+								display: 'flex', // Enables flexbox
+								justifyContent: 'center', // Centers content horizontally
+								alignItems: 'center', // Centers content vertically
+								height: '100%', // Ensures vertical centering within parent container
+							}}
+						>
+							<Chip
+								label={`Allotted Load On Machine: ${totalWeight !== null ? `${(totalWeight / 1000).toFixed(2)} tons` : 'N/A'}`}
+								color="primary"
+								variant="outlined"
+								sx={{
+									textAlign: 'center', // Centers text within the Chip
+								}}
+							/>
+						</Grid>
+
 						{machineDetails && (
 							<Grid item xs={12}>
 								<Alert variant="filled" severity="success">

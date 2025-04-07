@@ -102,25 +102,25 @@ function DataTableSection({ name, endpoint }) {
 		},
 		{
 			accessorKey: 'totalWeight',
-			header: 'Weight',
+			header: 'Total Wt(Kgs)',
 			size: 110,
 			enableSorting: false,
 		},
 		{
 			accessorKey: 'checkedRFI',
-			header: 'QCF Qty',
+			header: 'QCF Wt(Kgs)',
 			size: 120,
 			enableSorting: false,
 		},
 		{
 			accessorKey: 'checkedRFG',
-			header: 'RFG Qty',
+			header: 'RFG Wt(Kgs)',
 			size: 120,
 			enableSorting: false,
 		},
 		{
 			accessorKey: 'checkedQCG',
-			header: 'QCG Qty',
+			header: 'QCG Wt(Kgs)',
 			size: 120,
 			enableSorting: false,
 		},
@@ -132,7 +132,7 @@ function DataTableSection({ name, endpoint }) {
 		},
 		{
 			accessorKey: 'status',
-			header: 'Pending Qty',
+			header: 'Pending Wt(Kgs)',
 			size: 120,
 			Cell: ({ row }) => {
 				const status = row.original.status;
