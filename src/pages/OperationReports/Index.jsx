@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 	Breadcrumbs,
 	Typography,
@@ -29,13 +29,15 @@ import {
 } from '@mui/material';
 import PageHeader from '@/components/pageHeader';
 
-import { CloseOutlined } from '@mui/icons-material';
+import { CloseOutlined, Download } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import DataTable from '@/components/dataTable/Example';
 import { useApi } from '@/services/machineAPIService';
 import { enqueueSnackbar } from 'notistack';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import generatePDF from 'react-to-pdf';
+import InspectionReportTemplate from './InspectionReportTemplate';
 
 function OperationReports() {
 	return (
@@ -60,6 +62,7 @@ function DataTableSection({ endpoint }) {
 	const [error, setError] = useState(null);
 	const [modalData, setModalData] = useState(null);
 	const [open, setOpen] = useState(false);
+	const [showTemplate, setShowTemplate] = useState(false);
 
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -73,6 +76,22 @@ function DataTableSection({ endpoint }) {
 			enqueueSnackbar('Error fetching details:', { variant: 'error' });
 			setOpen(false);
 		}
+	};
+	const templateRef = useRef();
+	const handleGeneratePDF = () => {
+		setShowTemplate(true);
+		setTimeout(() => {
+			generatePDF(templateRef, {
+				filename: `inspection-report-${modalData?.routeSheetNo || 'unknown'}.pdf`,
+				page: {
+					margin: 1,
+					format: 'a4',
+					orientation: 'landscape',
+				},
+			}).then(() => {
+				setShowTemplate(false);
+			});
+		}, 100);
 	};
 
 	const refetch = async () => {
@@ -267,21 +286,22 @@ function DataTableSection({ endpoint }) {
 					<IconButton
 						aria-label="close"
 						onClick={handleCloseModal}
-						sx={{ position: 'absolute', right: 8, top: 8 }}
+						sx={{ position: 'absolute', right: 8, top: 8 }} // Adjusted right position
 					>
 						<CloseOutlined />
+					</IconButton>
+					<IconButton
+						aria-label="download"
+						onClick={handleGeneratePDF}
+						sx={{ position: 'absolute', right: 40, top: 10 }}
+					>
+						<Download />
 					</IconButton>
 				</DialogTitle>
 				<Divider />
 				<DialogContent sx={{ p: 0 }}>
 					{modalData ? (
 						<Grid container spacing={2}>
-							{/* {modalData.routeSheetNo && (
-								<Grid item xs={12} sm={12} md={12}>
-									<Typography variant="h6">Route Sheet No: {modalData.routeSheetNo}</Typography>
-								</Grid>
-							)} */}
-
 							{modalData.details && modalData.details.length > 0 ? (
 								<Grid item xs={12} sm={12} md={12} mt={0}>
 									<Box display="flex" justifyContent="center" sx={{ width: '100%' }}>
@@ -387,6 +407,19 @@ function DataTableSection({ endpoint }) {
 					)}
 				</DialogContent>
 			</Dialog>
+
+			<Box
+				ref={templateRef}
+				sx={{
+					position: 'absolute',
+					left: '-9999px',
+					width: '300mm',
+					backgroundColor: 'white',
+					visibility: showTemplate ? 'visible' : 'hidden',
+				}}
+			>
+				<InspectionReportTemplate data={modalData} />
+			</Box>
 		</>
 	);
 }
