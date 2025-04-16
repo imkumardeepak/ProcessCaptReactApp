@@ -301,7 +301,7 @@ function DataTableSection({ endpoint }) {
 
 	const columns = [
 		{
-			accessorKey: 'read_Date',
+			accessorKey: 'process_Date',
 			header: 'Date',
 			size: 100,
 			Cell: ({ cell }) => dayjs(cell.getValue()).format('YYYY-MM-DD'),

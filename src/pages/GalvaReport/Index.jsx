@@ -62,6 +62,26 @@ function DataTableSection({ name, endpoint }) {
 			},
 			enableSorting: false,
 		},
+
+		{
+			accessorKey: 'projectCode',
+			header: 'Project Code',
+			size: 80,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'wororderNo',
+			header: 'Work Order no',
+			size: 150,
+			enableSorting: false,
+		},
+
+		{
+			accessorKey: 'cutting',
+			header: 'Cutting Instruction',
+			size: 100,
+			enableSorting: true,
+		},
 		{
 			accessorKey: 'routeSheet',
 			header: 'Route Sheet',
@@ -70,17 +90,18 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
-			accessorKey: 'projectCode',
-			header: 'Project Code',
+			accessorKey: 'markNo',
+			header: 'Markno',
 			size: 120,
-			enableSorting: false,
+			enableSorting: true,
 		},
 		{
-			accessorKey: 'cutting',
-			header: 'Cutting Instruction',
+			accessorKey: 'section',
+			header: 'Section',
 			size: 180,
-			enableSorting: false,
+			enableSorting: true,
 		},
+
 		{
 			accessorKey: 'operation',
 			header: 'Pending Operations',
@@ -88,6 +109,7 @@ function DataTableSection({ name, endpoint }) {
 			Cell: ({ cell }) => <Chip label={cell.getValue().toUpperCase()} size="small" color="error" />,
 			enableSorting: false,
 		},
+
 		{
 			accessorKey: 'qnty',
 			header: 'Qnty',
@@ -100,24 +122,42 @@ function DataTableSection({ name, endpoint }) {
 			size: 120,
 			enableSorting: false,
 		},
-		// {
-		// 	accessorKey: 'length',
-		// 	header: 'Length',
-		// 	size: 100,
-		// 	enableSorting: false,
-		// },
-		// {
-		// 	accessorKey: 'width',
-		// 	header: 'Width',
-		// 	size: 100,
-		// 	enableSorting: false,
-		// },
-		// {
-		// 	accessorKey: 'wtperPc',
-		// 	header: 'Weight per Piece',
-		// 	size: 120,
-		// 	enableSorting: false,
-		// },
+		{
+			accessorKey: 'length',
+			header: 'Length',
+			size: 100,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'width',
+			header: 'Width',
+			size: 100,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'wtperPc',
+			header: 'Weight per Piece',
+			size: 120,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'batchno',
+			header: 'Batch',
+			size: 120,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'embos',
+			header: 'Embos',
+			size: 120,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'cipNo',
+			header: 'CIP No',
+			size: 120,
+			enableSorting: false,
+		},
 	];
 	// Render Loading/Error States
 	if (isLoading) {

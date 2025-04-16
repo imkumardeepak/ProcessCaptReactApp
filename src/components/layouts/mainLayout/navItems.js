@@ -125,6 +125,10 @@ const NAV_LINKS_CONFIG = [
 				title: 'Galva Report',
 				href: '/pages/galvaReport',
 			},
+			{
+				title: 'Machine Load Report',
+				href: '/pages/machineLoadReport',
+			},
 		],
 	},
 	{

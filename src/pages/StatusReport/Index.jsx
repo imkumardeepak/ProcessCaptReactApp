@@ -21,7 +21,8 @@ import {
 	Chip,
 	TableContainer,
 	useTheme,
-	useMediaQuery, // Import TableContainer
+	useMediaQuery,
+	Grid, // Import TableContainer
 } from '@mui/material';
 import PageHeader from '@/components/pageHeader';
 
@@ -30,6 +31,12 @@ import dayjs from 'dayjs';
 import DataTable from '@/components/dataTable/Example';
 import { useApi } from '@/services/machineAPIService';
 import { enqueueSnackbar } from 'notistack';
+import PageImpressionsCard from './pageImpressionsCard';
+import ActivitiesCard from './activitiesCard';
+import CustomersOverviewCard from './customerCard';
+import SalesOverviewCard from './salesOverviewCard';
+import SaleProgressCard from './saleProgressCard';
+import MostVisitedCard from './mostVisitedCard';
 
 function StatusReport() {
 	return (
@@ -51,9 +58,12 @@ function DataTableSection({ endpoint }) {
 	const { fetchData } = useApi();
 	const [data, setData] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isCuttingLoading, setIsCuttingLoading] = useState(false);
 	const [error, setError] = useState(null);
 	const [modalData, setModalData] = useState(null);
 	const [open, setOpen] = useState(false);
+	const [cuttingData, setCuttingData] = useState(null);
+	const [cuttingOpen, setCuttingOpen] = useState(false);
 
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -84,6 +94,21 @@ function DataTableSection({ endpoint }) {
 		}
 	};
 
+	const fetchCuttingDetails = async (cuttingNo) => {
+		setIsCuttingLoading(true);
+		try {
+			const response = await fetchData(`Report/GetCuttingSummary?cuttingNo=${cuttingNo}`);
+			console.log(response);
+			setCuttingData(response);
+			setCuttingOpen(true);
+		} catch (err) {
+			enqueueSnackbar('Error fetching details:', { variant: 'error' });
+			setCuttingOpen(false);
+		} finally {
+			setIsCuttingLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		refetch();
 	}, [endpoint]);
@@ -93,16 +118,34 @@ function DataTableSection({ endpoint }) {
 		setModalData(null);
 	};
 
+	const handleCloseCuttingModal = () => {
+		setCuttingOpen(false);
+		setCuttingData(null);
+	};
+
 	const columns = [
-		{
-			accessorKey: 'process_Date',
-			header: 'Date',
-			size: 100,
-			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
-		},
 		{ accessorKey: 'plantCode', header: 'Project', size: 80 },
-		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 80 },
-		{ accessorKey: 'markNo', header: 'Mark No', size: 120 },
+		{
+			accessorKey: 'workOrder',
+			header: 'Work Order',
+			size: 110,
+			enableSorting: true,
+		},
+		{
+			accessorKey: 'cuttingNo',
+			header: 'Cutting No',
+			size: 100,
+			Cell: ({ cell }) => (
+				<Button
+					variant="text"
+					color="primary"
+					onClick={() => fetchCuttingDetails(cell.getValue())}
+					sx={{ textTransform: 'none' }}
+				>
+					{cell.getValue()}
+				</Button>
+			),
+		},
 		{
 			accessorKey: 'routeSheetNo',
 			header: 'Sheet No',
@@ -118,7 +161,13 @@ function DataTableSection({ endpoint }) {
 				</Button>
 			),
 		},
-		// { accessorKey: 'subRouteSheetNo', header: 'SubRouteSheetNo ', size: 210 },
+		{
+			accessorKey: 'subRouteSheetNo',
+			header: 'Sub-Sheet No',
+			size: 120,
+		},
+		{ accessorKey: 'markNo', header: 'Mark No', size: 120 },
+		{ accessorKey: 'setcion', header: 'Section Desc', size: 160 },
 		{ accessorKey: 'totalQunty', header: 'TQ', size: 80, enableColumnFilter: false, enableSorting: false },
 		{ accessorKey: 'pendingQunty', header: 'BQ', size: 80, enableColumnFilter: false, enableSorting: false },
 		{
@@ -168,8 +217,20 @@ function DataTableSection({ endpoint }) {
 		{
 			accessorKey: 'nextCode',
 			header: 'Next ',
-			size: 170,
+			size: 150,
 			Cell: ({ row }) => <Chip label={row.original.nextCode.toUpperCase()} color="error" size="small" />,
+		},
+		{ accessorKey: 'totalWt', header: 'Total Wt', size: 80 },
+		{ accessorKey: 'length', header: 'Length', size: 100 },
+		{ accessorKey: 'width', header: 'Width', size: 100 },
+		{ accessorKey: 'batch', header: 'Batch', size: 110 },
+		{ accessorKey: 'cip', header: 'CIP', size: 110 },
+		{ accessorKey: 'embosing', header: 'Embosing', size: 110 },
+		{
+			accessorKey: 'process_Date',
+			header: 'Date',
+			size: 100,
+			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
 		},
 	];
 
@@ -267,6 +328,83 @@ function DataTableSection({ endpoint }) {
 						</TableContainer>
 					) : (
 						<Typography variant="body2">No production details available.</Typography>
+					)}
+				</DialogContent>
+			</Dialog>
+
+			<Dialog
+				open={cuttingOpen}
+				onClose={handleCloseCuttingModal}
+				maxWidth="lg"
+				fullScreen={fullScreen}
+				fullWidth
+			>
+				<DialogTitle variant="h4" bgcolor={'primary.paper'}>
+					All Details of Cutting No {cuttingData?.cuttingNo || ''}
+					<IconButton
+						aria-label="close"
+						onClick={handleCloseCuttingModal}
+						sx={{ position: 'absolute', right: 8, top: 8 }}
+					>
+						<CloseOutlined />
+					</IconButton>
+				</DialogTitle>
+				<Divider />
+				<DialogContent sx={{ p: 2 }}>
+					{isCuttingLoading ? (
+						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
+							<CircularProgress />
+						</Box>
+					) : (
+						<>
+							{cuttingData ? (
+								<Grid container spacing={3}>
+									<Grid
+										item
+										xs={12}
+										sm={6}
+										md={3}
+										order={{
+											xs: 2,
+											sm: 1,
+											md: 1,
+										}}
+									>
+										<Stack spacing={3} direction="column">
+											<PageImpressionsCard cuttingData={cuttingData} />
+											<ActivitiesCard />
+											{/* <TodoListCard /> */}
+										</Stack>
+									</Grid>
+									<Grid
+										item
+										xs={12}
+										sm={12}
+										md={6}
+										order={{
+											xs: 1,
+											sm: 4,
+											md: 2,
+										}}
+									>
+										<Stack spacing={3} direction="column">
+											<CustomersOverviewCard cuttingData={cuttingData} />
+											<SalesOverviewCard cuttingData={cuttingData} />
+											{/* <ShareThougts /> */}
+										</Stack>
+									</Grid>
+									<Grid item xs={12} sm={6} md={3} order={3}>
+										<Stack spacing={3} direction="column">
+											<MostVisitedCard cuttingData={cuttingData} />
+											<SaleProgressCard cuttingData={cuttingData} />
+											{/* <ContactCard /> */}
+										</Stack>
+									</Grid>
+								</Grid>
+							) : (
+								<Typography variant="body2">No cutting details available.</Typography>
+							)}
+						</>
 					)}
 				</DialogContent>
 			</Dialog>

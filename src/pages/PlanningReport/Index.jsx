@@ -72,9 +72,15 @@ function DataTableSection({ name, endpoint }) {
 			enableGrouping: false,
 		},
 		{
+			accessorKey: 'workOrderNo',
+			header: 'Work Order',
+			size: 120,
+			enableGrouping: false,
+		},
+		{
 			accessorKey: 'sectionDesc',
 			header: 'Section Description',
-			size: 190,
+			size: 180,
 			enableSorting: false,
 		},
 		{
@@ -86,7 +92,7 @@ function DataTableSection({ name, endpoint }) {
 			enableGrouping: false,
 		},
 		{
-			accessorKey: 'planningtotalWT',
+			accessorKey: 'planningTotalWT',
 			header: 'WT(Kgs)',
 			size: 100,
 			Cell: ({ cell }) => {
@@ -100,7 +106,7 @@ function DataTableSection({ name, endpoint }) {
 		{
 			accessorKey: 'floorReleaseRouteSheet',
 			header: 'SPR Qnty',
-			size: 110,
+			size: 100,
 			Cell: ({ cell }) => <Chip label={cell.getValue()} size="small" color="primary" />,
 			enableSorting: false,
 			enableGrouping: false,
@@ -120,7 +126,7 @@ function DataTableSection({ name, endpoint }) {
 		{
 			accessorKey: 'pendingRelease',
 			header: 'Pending SPR',
-			size: 130,
+			size: 110,
 			Cell: ({ cell }) => <Chip label={cell.getValue()} size="small" color="error" />,
 			enableSorting: false,
 			enableGrouping: false,
@@ -128,7 +134,7 @@ function DataTableSection({ name, endpoint }) {
 		{
 			accessorKey: 'pendingReleaseWT',
 			header: 'WT(Kgs)',
-			size: 110,
+			size: 100,
 			Cell: ({ cell }) => {
 				const value = cell.getValue(); // e.g., 200000
 				const formattedValue = new Intl.NumberFormat('en-IN').format(value); // Formats to "2,00,000"

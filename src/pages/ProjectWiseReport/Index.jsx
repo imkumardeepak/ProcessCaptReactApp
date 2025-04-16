@@ -50,47 +50,17 @@ function DataTableSection({ name, endpoint }) {
 
 	const columns = [
 		{
-			accessorKey: 'date',
-			header: 'Date',
-			size: 100,
-			Cell: ({ cell }) => {
-				const date = cell.getValue();
-				return date
-					? new Date(date).toLocaleDateString('en-GB', {
-							day: '2-digit',
-							month: '2-digit',
-							year: 'numeric',
-						})
-					: '-';
-			},
-			enableSorting: false,
-			Filter: ({ column }) => {
-				const [selectedDate, setSelectedDate] = useState(null);
-
-				return (
-					<LocalizationProvider dateAdapter={AdapterDayjs}>
-						<DatePicker
-							label="Select Date"
-							value={selectedDate}
-							onChange={(newValue) => {
-								setSelectedDate(newValue);
-								column.setFilterValue(newValue ? dayjs(newValue).format('YYYY-MM-DD') : null);
-							}}
-							renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
-						/>
-					</LocalizationProvider>
-				);
-			},
-			filterFn: (row, columnId, filterValue) => {
-				const rowDate = dayjs(row.getValue(columnId)).format('YYYY-MM-DD');
-				return rowDate === filterValue;
-			},
-		},
-		{
 			accessorKey: 'plantcode',
 			header: 'Project',
-			size: 110,
+			size: 130,
 			orderBy: 'plantcode',
+			enableSorting: true,
+		},
+		{
+			accessorKey: 'workOrderNo',
+			header: 'Work Order',
+			size: 150,
+			enableSorting: true,
 		},
 
 		{

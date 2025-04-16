@@ -10,7 +10,6 @@ import ProtectedRoute from '../../context/ProtectedRoute';
 import PermissionDenied from '@/pages/errorPages/PermissionDenied';
 
 const Dashboard1Page = withLazyLoadably(lazy(() => import('@/pages/dashboardsPages/dashboard1')));
-const Dashboard2Page = withLazyLoadably(lazy(() => import('@/pages/dashboardsPages/dashboard2')));
 const Dashboard3Page = withLazyLoadably(lazy(() => import('@/pages/dashboardsPages/dashboard3')));
 const Dashboard4Page = withLazyLoadably(lazy(() => import('@/pages/dashboardsPages/dashboard4')));
 const Dashboard5Page = withLazyLoadably(lazy(() => import('@/pages/dashboardsPages/dashboard5')));
@@ -27,6 +26,7 @@ const RouteSheetSummaryReport = withLazyLoadably(lazy(() => import('@/pages/Rout
 const GalvaReport = withLazyLoadably(lazy(() => import('@/pages/GalvaReport/Index')));
 const CycleTimeReports = withLazyLoadably(lazy(() => import('@/pages/CycleTimeReports/Index')));
 const PlanningReport = withLazyLoadably(lazy(() => import('@/pages/PlanningReport/Index')));
+const MachineLoadReport = withLazyLoadably(lazy(() => import('@/pages/MachineLoadReport/Index')));
 const ProjectWiseReport = withLazyLoadably(lazy(() => import('@/pages/ProjectWiseReport/Index')));
 const OperationReports = withLazyLoadably(lazy(() => import('@/pages/OperationReports/Index')));
 const ShopFloorRelease = withLazyLoadably(lazy(() => import('@/pages/ShopFloorRelease/index')));
@@ -95,7 +95,7 @@ function Router() {
 										</ProtectedRoute>
 									}
 								/>
-								<Route path="dashboard2" element={<Dashboard2Page />} />
+
 								<Route
 									path="dashboard3"
 									element={
@@ -302,6 +302,14 @@ function Router() {
 									element={
 										<ProtectedRoute>
 											<GalvaReport />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="machineLoadReport"
+									element={
+										<ProtectedRoute>
+											<MachineLoadReport />
 										</ProtectedRoute>
 									}
 								/>

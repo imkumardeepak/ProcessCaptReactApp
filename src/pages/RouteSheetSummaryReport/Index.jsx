@@ -66,24 +66,31 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
+			accessorKey: 'projectCode',
+			header: 'Project Code',
+			size: 80,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'workOrder',
+			header: 'Work Order',
+			size: 110,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'cutting',
+			header: 'Cutting Instruction',
+			size: 110,
+			enableSorting: false,
+		},
+		{
 			accessorKey: 'routeSheet',
 			header: 'Route Sheet',
 			size: 120,
 			Cell: ({ cell }) => <Chip label={cell.getValue()} size="small" color="success" />,
 			enableSorting: false,
 		},
-		{
-			accessorKey: 'projectCode',
-			header: 'Project Code',
-			size: 100,
-			enableSorting: false,
-		},
-		{
-			accessorKey: 'cutting',
-			header: 'Cutting Instruction',
-			size: 130,
-			enableSorting: false,
-		},
+
 		{
 			accessorKey: 'markNo',
 			header: 'Mark No',
@@ -110,6 +117,12 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
+			accessorKey: 'wtperPc',
+			header: 'W/P',
+			size: 100,
+			enableSorting: false,
+		},
+		{
 			accessorKey: 'toatlwt',
 			header: 'Weight',
 			size: 120,
@@ -128,13 +141,6 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
-			accessorKey: 'wtperPc',
-			header: 'Weight per Piece',
-			size: 120,
-			enableSorting: false,
-		},
-
-		{
 			accessorKey: 'batchno',
 			header: 'Batch No',
 			size: 120,
@@ -143,6 +149,12 @@ function DataTableSection({ name, endpoint }) {
 		{
 			accessorKey: 'embos',
 			header: 'Embossing',
+			size: 120,
+			enableSorting: false,
+		},
+		{
+			accessorKey: 'cipNo',
+			header: 'CIP No',
 			size: 120,
 			enableSorting: false,
 		},

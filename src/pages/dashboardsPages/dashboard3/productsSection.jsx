@@ -65,7 +65,7 @@ function ProductsTable() {
 				<TableHead>
 					<TableRow>
 						<TableCell>#</TableCell>
-						<TableCell align="center">Date</TableCell>
+						{/* <TableCell align="center">Date</TableCell> */}
 						<TableCell align="center">Project</TableCell>
 						<TableCell align="center">Total Quantity</TableCell>
 						<TableCell align="center">Total Weight</TableCell>
@@ -87,8 +87,7 @@ function ProductsTable() {
 }
 
 function ProductsTableRow({ purchase, index }) {
-	const { date, plantcode, totalQnty, totalWeight, checkedRFI, checkedRFG, checkedQCG, checkedRFD, status } =
-		purchase;
+	const { plantcode, totalQnty, totalWeight, checkedRFI, checkedRFG, checkedQCG, checkedRFD, status } = purchase;
 	const serialNumber = index + 1; // Calculate serial number
 
 	return (
@@ -98,15 +97,7 @@ function ProductsTableRow({ purchase, index }) {
 					{serialNumber}
 				</Typography>
 			</TableCell>
-			<TableCell align="center">
-				<Typography variant="subtitle2" color="text.primary">
-					{new Date(date).toLocaleDateString('en-GB', {
-						day: '2-digit',
-						month: '2-digit',
-						year: 'numeric',
-					})}
-				</Typography>
-			</TableCell>
+
 			<TableCell align="center">
 				<Typography variant="body2" color="text.secondary">
 					{plantcode}

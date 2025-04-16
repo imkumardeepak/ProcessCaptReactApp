@@ -200,8 +200,7 @@ function ChatBox() {
 								},
 							}}
 						>
-							{displayData &&
-								displayData.slice(0, 6).map((user) => <UserListItem key={user.id} user={user} />)}
+							{displayData && displayData.map((user) => <UserListItem key={user.id} user={user} />)}
 						</List>
 					)}
 				</Card>

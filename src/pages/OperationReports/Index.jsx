@@ -118,40 +118,32 @@ function DataTableSection({ endpoint }) {
 	};
 
 	const columns = [
-		{
-			accessorKey: 'process_Date',
-			header: 'Date',
-			size: 100,
-			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
-			Filter: ({ column }) => {
-				const [selectedDate, setSelectedDate] = useState(null);
-
-				return (
-					<LocalizationProvider dateAdapter={AdapterDayjs}>
-						<DatePicker
-							label="Select Date"
-							value={selectedDate}
-							onChange={(newValue) => {
-								setSelectedDate(newValue);
-								column.setFilterValue(newValue ? dayjs(newValue).format('YYYY-MM-DD') : null);
-							}}
-							renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
-						/>
-					</LocalizationProvider>
-				);
-			},
-			filterFn: (row, columnId, filterValue) => {
-				const rowDate = dayjs(row.getValue(columnId)).format('YYYY-MM-DD');
-				return rowDate === filterValue;
-			},
-		},
 		{ accessorKey: 'plantCode', header: 'Project', size: 80 },
-		{ accessorKey: 'cuttingNo', header: 'Cutting No', size: 80 },
-		{ accessorKey: 'markNo', header: 'Mark No', size: 120 },
+		{
+			accessorKey: 'workOrder',
+			header: 'Work Order',
+			size: 110,
+			enableSorting: true,
+		},
+		{
+			accessorKey: 'cuttingNo',
+			header: 'Cutting No',
+			size: 100,
+			// Cell: ({ cell }) => (
+			// 	<Button
+			// 		variant="text"
+			// 		color="primary"
+			// 		onClick={() => fetchCuttingDetails(cell.getValue())}
+			// 		sx={{ textTransform: 'none' }}
+			// 	>
+			// 		{cell.getValue()}
+			// 	</Button>
+			// ),
+		},
 		{
 			accessorKey: 'routeSheetNo',
 			header: 'Sheet No',
-			size: 110,
+			size: 120,
 			Cell: ({ cell }) => (
 				<Button
 					variant="text"
@@ -163,7 +155,13 @@ function DataTableSection({ endpoint }) {
 				</Button>
 			),
 		},
-		// { accessorKey: 'subRouteSheetNo', header: 'SubRouteSheetNo ', size: 210 },
+		{
+			accessorKey: 'subRouteSheetNo',
+			header: 'Sub-Sheet No',
+			size: 120,
+		},
+		{ accessorKey: 'markNo', header: 'Mark No', size: 120 },
+		{ accessorKey: 'setcion', header: 'Section Desc', size: 160 },
 		{ accessorKey: 'totalQunty', header: 'TQ', size: 80, enableColumnFilter: false, enableSorting: false },
 		{ accessorKey: 'pendingQunty', header: 'BQ', size: 80, enableColumnFilter: false, enableSorting: false },
 		{
@@ -203,31 +201,7 @@ function DataTableSection({ endpoint }) {
 					)}
 				</Tooltip>
 			),
-			Filter: ({ column }) => {
-				const [selectedStatus, setSelectedStatus] = useState(null);
-
-				const handleStatusChange = (event) => {
-					setSelectedStatus(event.target.value);
-					column.setFilterValue(event.target.value);
-				};
-
-				return (
-					<Select value={selectedStatus} onChange={handleStatusChange} size="small" sx={{ width: '100%' }}>
-						<MenuItem value={null}>ALL</MenuItem>
-						<MenuItem value={0}>IN-PROCESS</MenuItem>
-						<MenuItem value={1}>COMPLETED</MenuItem>
-						<MenuItem value={2}>ON-HOLD</MenuItem>
-					</Select>
-				);
-			},
-			filterFn: (row, columnId, filterValue) => {
-				if (filterValue === null) {
-					return true;
-				}
-				return row.getValue(columnId) === filterValue;
-			},
 		},
-
 		{
 			accessorKey: 'statusCode',
 			header: 'Completed',
@@ -237,8 +211,20 @@ function DataTableSection({ endpoint }) {
 		{
 			accessorKey: 'nextCode',
 			header: 'Next ',
-			size: 170,
+			size: 150,
 			Cell: ({ row }) => <Chip label={row.original.nextCode.toUpperCase()} color="error" size="small" />,
+		},
+		{ accessorKey: 'totalWt', header: 'Total Wt', size: 80 },
+		{ accessorKey: 'length', header: 'Length', size: 100 },
+		{ accessorKey: 'width', header: 'Width', size: 100 },
+		{ accessorKey: 'batch', header: 'Batch', size: 110 },
+		{ accessorKey: 'cip', header: 'CIP', size: 110 },
+		{ accessorKey: 'embosing', header: 'Embosing', size: 110 },
+		{
+			accessorKey: 'process_Date',
+			header: 'Date',
+			size: 100,
+			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
 		},
 	];
 
