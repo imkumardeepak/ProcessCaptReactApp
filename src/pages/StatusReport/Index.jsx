@@ -22,7 +22,9 @@ import {
 	TableContainer,
 	useTheme,
 	useMediaQuery,
-	Grid, // Import TableContainer
+	Grid,
+	Select,
+	MenuItem, // Import TableContainer
 } from '@mui/material';
 import PageHeader from '@/components/pageHeader';
 
@@ -188,6 +190,27 @@ function DataTableSection({ endpoint }) {
 			accessorKey: 'isCompleted',
 			header: 'Status',
 			size: 100,
+			// Filter configuration
+			filterFn: (row, columnId, filterValue) => {
+				if (filterValue === 'all') return true;
+				return row.original.isCompleted.toString() === filterValue;
+			},
+			// Filter component
+			Filter: ({ column }) => (
+				<Select
+					size="small"
+					value={column.getFilterValue() || 'all'}
+					onChange={(e) => column.setFilterValue(e.target.value)}
+					displayEmpty
+					fullWidth
+				>
+					<MenuItem value="all">All Statuses</MenuItem>
+					<MenuItem value="0">IN-PROCESS</MenuItem>
+					<MenuItem value="1">COMPLETED</MenuItem>
+					<MenuItem value="2">ON-HOLD</MenuItem>
+				</Select>
+			),
+			// Existing Cell render
 			Cell: ({ row }) => (
 				<Tooltip
 					title={
@@ -208,6 +231,7 @@ function DataTableSection({ endpoint }) {
 				</Tooltip>
 			),
 		},
+
 		{
 			accessorKey: 'statusCode',
 			header: 'Completed',
@@ -228,9 +252,8 @@ function DataTableSection({ endpoint }) {
 		{ accessorKey: 'embosing', header: 'Embosing', size: 110 },
 		{
 			accessorKey: 'process_Date',
-			header: 'Date',
+			header: 'SFR Date',
 			size: 100,
-			Cell: ({ cell }) => dayjs(cell.getValue()).format('DD-MM-YYYY'),
 		},
 	];
 
@@ -372,8 +395,8 @@ function DataTableSection({ endpoint }) {
 									>
 										<Stack spacing={3} direction="column">
 											<PageImpressionsCard cuttingData={cuttingData} />
-											<ActivitiesCard />
-											{/* <TodoListCard /> */}
+											<SaleProgressCard cuttingData={cuttingData} />
+											{/* <SalesOverviewCard cuttingData={cuttingData} /> */}
 										</Stack>
 									</Grid>
 									<Grid
@@ -389,15 +412,13 @@ function DataTableSection({ endpoint }) {
 									>
 										<Stack spacing={3} direction="column">
 											<CustomersOverviewCard cuttingData={cuttingData} />
-											<SalesOverviewCard cuttingData={cuttingData} />
+
 											{/* <ShareThougts /> */}
 										</Stack>
 									</Grid>
 									<Grid item xs={12} sm={6} md={3} order={3}>
 										<Stack spacing={3} direction="column">
 											<MostVisitedCard cuttingData={cuttingData} />
-											<SaleProgressCard cuttingData={cuttingData} />
-											{/* <ContactCard /> */}
 										</Stack>
 									</Grid>
 								</Grid>

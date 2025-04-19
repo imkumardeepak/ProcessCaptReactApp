@@ -10,27 +10,25 @@ import Chart from 'react-apexcharts';
 import getDefaultChartsColors from '@helpers/getDefaultChartsColors';
 
 import CardHeader from '@/components/cardHeader';
+import { Skeleton, Typography } from '@mui/material';
 
 function EarningsSection() {
 	const theme = useTheme();
 	const { fetchData } = useApi();
-	const { data: usersData, isLoading, error } = useData('Count', () => fetchData('Home/iscompleted'));
-
-	const [pendingCount, setPendingCount] = useState(0);
-	const [completedCount, setCompletedCount] = useState(0);
-	const [shopfloorcount, setshopfloorcount] = useState(0);
+	const { data: usersData, isLoading, error } = useData('Dashboard', () => fetchData('Home/GetOverallView')); // Fetch employee data
+	const [displayData, setDisplayData] = useState([]);
 
 	useEffect(() => {
 		if (usersData) {
-			setPendingCount(usersData.pendingCount || 0);
-			setCompletedCount(usersData.completedCount || 0);
-			setshopfloorcount(usersData.shopfloor || 0);
+			setDisplayData(usersData);
+		} else {
+			setDisplayData([]);
 		}
 	}, [usersData]);
 
 	const getCustomerGraphConfig = (config) => ({
 		options: {
-			colors: getDefaultChartsColors(2),
+			colors: getDefaultChartsColors(3),
 			chart: {
 				...(config?.mode === 'dark' && { foreColor: '#fff' }),
 				toolbar: {
@@ -41,7 +39,7 @@ function EarningsSection() {
 				},
 				parentHeightOffset: 0,
 			},
-			labels: ['Pending', 'Completed'],
+			labels: ['Planning Release', 'Shop Floor Release', 'Pending Floor Release', 'Completed Routesheet'],
 			legend: {
 				show: true,
 				position: 'bottom',
@@ -52,11 +50,11 @@ function EarningsSection() {
 				fontFamily: 'inherit',
 				fontSize: 13,
 
-				floating: true,
-				offsetY: 90,
+				floating: false,
+				offsetY: 10,
 				markers: {
-					width: 15,
-					height: 15,
+					width: 10,
+					height: 10,
 				},
 			},
 			tooltip: {
@@ -86,23 +84,33 @@ function EarningsSection() {
 				},
 			},
 		},
-		series: [pendingCount, completedCount],
+		series: [
+			displayData.planningReleaseRoutesheet || 0,
+			displayData.shopReleaseRouteshhet || 0,
+			displayData.pendingshopReleaseRouteshhet || 0,
+			displayData.completedRoutesheet || 0,
+		],
 	});
-
+	const chartConfig = getCustomerGraphConfig({ mode: theme.palette.mode });
 	return (
 		<Card>
 			<CardHeader title="Status Report" size="small" />
-			<Box
-				color="text.primary"
-				component={Chart}
-				options={getCustomerGraphConfig({ mode: theme.palette.mode })?.options}
-				series={getCustomerGraphConfig({ mode: theme.palette.mode })?.series}
-				type="donut"
-				width="100%"
-				height="100%"
-				mb={10}
-				mt={0}
-			/>
+			{isLoading ? (
+				<Skeleton variant="rectangular" height={150} animation="wave" />
+			) : error ? (
+				<Box p={2} textAlign="center">
+					<Typography color="error">Error loading data</Typography>
+				</Box>
+			) : (
+				<Box
+					component={Chart}
+					options={chartConfig.options}
+					series={chartConfig.series}
+					type="donut"
+					width="100%"
+					height={250}
+				/>
+			)}
 		</Card>
 	);
 }

@@ -144,6 +144,7 @@ function DataTableSection({ endpoint }) {
 				setRouteSheetNo('');
 				setModalData(null);
 				setMachineDetails(null);
+				setTotalWeight(0);
 				refetch();
 			} else {
 				enqueueSnackbar('Failed to release production.', { variant: 'error' });

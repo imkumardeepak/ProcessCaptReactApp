@@ -51,7 +51,7 @@ export const useApi = () => {
 
 			return await response.json();
 		} catch (error) {
-			enqueueSnackbar(`Error: ${error.message}`, { variant: 'error' });
+			// enqueueSnackbar(`Error: ${error.message}`, { variant: 'error' });
 			return false;
 		}
 	};

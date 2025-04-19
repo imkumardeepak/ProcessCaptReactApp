@@ -78,6 +78,10 @@ const NAV_LINKS_CONFIG = [
 				href: '/pages/processqccheck',
 			},
 			{
+				title: 'Process Capture Bulk',
+				href: '/pages/processqccheckbulk',
+			},
+			{
 				title: 'Quality Check',
 				href: '/pages/qualitycheck',
 			},
@@ -102,7 +106,7 @@ const NAV_LINKS_CONFIG = [
 				href: '/pages/statusreport',
 			},
 			{
-				title: 'Operation Reports',
+				title: 'Daily Operation Reports',
 				href: '/pages/operationreports',
 			},
 			{

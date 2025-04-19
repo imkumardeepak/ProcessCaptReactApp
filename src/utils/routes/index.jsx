@@ -32,6 +32,7 @@ const OperationReports = withLazyLoadably(lazy(() => import('@/pages/OperationRe
 const ShopFloorRelease = withLazyLoadably(lazy(() => import('@/pages/ShopFloorRelease/index')));
 const UserManagement = withLazyLoadably(lazy(() => import('@/pages/UserManage/index')));
 const ProcessQCCheck = withLazyLoadably(lazy(() => import('@/pages/Process_QC_Check/index')));
+const ProcessQCCheckBulk = withLazyLoadably(lazy(() => import('@/pages/Process_QC_Bulk/Index')));
 const ChatPage = withLazyLoadably(lazy(() => import('@/pages/ChatPage/Index')));
 const Galva = withLazyLoadably(lazy(() => import('@/pages/Galva/index')));
 const Despatched = withLazyLoadably(lazy(() => import('@/pages/Despatched/Index')));
@@ -198,6 +199,14 @@ function Router() {
 									element={
 										<ProtectedRoute requiredRole={['SUPERADMIN', 'ADMIN', 'PROCESS CAPT']}>
 											<ProcessQCCheck />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="processqccheckbulk"
+									element={
+										<ProtectedRoute requiredRole={['SUPERADMIN', 'ADMIN']}>
+											<ProcessQCCheckBulk />
 										</ProtectedRoute>
 									}
 								/>

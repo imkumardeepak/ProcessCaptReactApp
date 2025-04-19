@@ -51,18 +51,8 @@ function DataTableSection({ name, endpoint }) {
 	const columns = [
 		{
 			accessorKey: 'planningIssue',
-			header: 'Date',
+			header: 'SFR Date',
 			size: 120,
-			Cell: ({ cell }) => {
-				const date = cell.getValue();
-				return date
-					? new Date(date).toLocaleDateString('en-GB', {
-							day: '2-digit',
-							month: '2-digit',
-							year: 'numeric',
-						})
-					: '-';
-			},
 			enableSorting: false,
 		},
 		{
@@ -112,13 +102,13 @@ function DataTableSection({ name, endpoint }) {
 		},
 		{
 			accessorKey: 'qnty',
-			header: 'Qnty',
+			header: 'Qty',
 			size: 100,
 			enableSorting: false,
 		},
 		{
 			accessorKey: 'wtperPc',
-			header: 'W/P',
+			header: 'Wt/Pcs',
 			size: 100,
 			enableSorting: false,
 		},
@@ -159,7 +149,7 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 	];
-	// Render Loading/Error States
+
 	if (isLoading) {
 		return (
 			<Box display="flex" justifyContent="center" alignItems="center" height="200px">

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { debounce } from 'lodash';
 import {
 	Breadcrumbs,
 	Typography,
@@ -27,13 +28,18 @@ import {
 	ThemeProvider,
 	createTheme,
 	useTheme,
+	DialogActions,
+	TableContainer,
 } from '@mui/material';
 import PageHeader from '@/components/pageHeader';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import {
+	AddOutlined,
 	CloseOutlined,
+	DoneAllOutlined,
 	HourglassBottomRounded,
+	NewReleasesOutlined,
 	PublishedWithChangesOutlined,
 	TurnedInNotOutlined,
 } from '@mui/icons-material';
@@ -68,8 +74,7 @@ function ProductionRelease() {
 
 function DataTableSection({ endpoint }) {
 	const { fetchData, createResource } = useApi();
-	const { data, isLoading, error, refetch } = useData(endpoint, () => fetchData(endpoint));
-
+	const theme = useTheme();
 	const [rowSelection, setRowSelection] = useState([]);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [fullRouteSheets, setFullRouteSheets] = useState([]);
@@ -77,6 +82,19 @@ function DataTableSection({ endpoint }) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [partialQuantities, setPartialQuantities] = useState({});
 	const [availableQuantities, setAvailableQuantities] = useState({});
+	const [AgainReleaseModal, SetAgainReleaseModal] = useState(false);
+	const [routeSheetNo, setRouteSheetNo] = useState('');
+	const [routeSheetDetails, setRouteSheetDetails] = useState(null);
+	const [loading, setLoading] = useState(false);
+	const [routesheetsList, setRoutesheetsList] = useState([]);
+	const [currentQuantity, setCurrentQuantity] = useState(0);
+	const [EnterQuantity, setEnterQuantity] = useState(0);
+	const routeSheetRef = useRef(null);
+	const fetchCallback = useCallback(
+		debounce(() => fetchData(endpoint), 300),
+		[fetchData, endpoint],
+	);
+	const { data, isLoading, error, refetch } = useData(endpoint, fetchCallback);
 
 	const {
 		register,
@@ -377,242 +395,398 @@ function DataTableSection({ endpoint }) {
 		setModalOpen(true);
 	};
 
-	const columns = [
-		{
-			accessorKey: 'read_Date',
-			header: 'Date',
-			size: 100,
-			Cell: ({ cell }) => dayjs(cell.getValue()).format('YYYY-MM-DD'),
-			Filter: ({ column }) => {
-				const [selectedDate, setSelectedDate] = useState(null);
+	const handleReleaseAgainClick = () => {
+		SetAgainReleaseModal(true);
+		setTimeout(() => {
+			if (routeSheetRef.current) {
+				routeSheetRef.current.focus();
+			}
+		}, 100);
+	};
 
-				return (
-					<LocalizationProvider dateAdapter={AdapterDayjs}>
-						<DatePicker
-							label="Select Date"
-							value={selectedDate}
-							onChange={(newValue) => {
-								setSelectedDate(newValue);
-								column.setFilterValue(newValue ? dayjs(newValue).format('YYYY-MM-DD') : null);
-							}}
-							renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
-						/>
-					</LocalizationProvider>
-				);
+	const handleReleaseAgainClose = () => {
+		SetAgainReleaseModal(false);
+		setRouteSheetNo('');
+		setCurrentQuantity(0);
+		setRoutesheetsList([]);
+		setRouteSheetDetails(null);
+		setEnterQuantity(0);
+	};
+
+	const handleInputChange = (e) => {
+		setRouteSheetNo(e.target.value);
+	};
+	const fetchDetails = async () => {
+		setLoading(true);
+		try {
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=0`);
+			console.log(response);
+			if (!response || !response.details) {
+				console.log('No details found for the route sheet.');
+				setRouteSheetDetails(null);
+				enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
+				setTimeout(() => {
+					if (routeSheetRef.current) {
+						routeSheetRef.current.focus();
+					}
+				}, 100);
+			} else if (response.totalQunty > 1) {
+				setRouteSheetDetails(null);
+				setEnterQuantity(0);
+				setRoutesheetsList([]);
+				setCurrentQuantity(0);
+				setRouteSheetDetails(response);
+				enqueueSnackbar('Route Sheet Details Found successfully', { variant: 'success' });
+				setCurrentQuantity(response.totalQunty);
+			} else {
+				enqueueSnackbar('Quantity is Always greater than 1', { variant: 'info' });
+				setRouteSheetDetails(null);
+				setRouteSheetNo('');
+				setTimeout(() => {
+					if (routeSheetRef.current) {
+						routeSheetRef.current.focus();
+					}
+				}, 100);
+			}
+		} catch (e) {
+			enqueueSnackbar(`Failed to fetch details: ${e.message}`, { variant: 'error' });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === 'Enter') {
+			fetchDetails();
+		}
+	};
+
+	const handlePartialAddClick = () => {
+		if (!routeSheetDetails || !routeSheetNo || EnterQuantity <= 0) {
+			enqueueSnackbar('Please enter a valid route sheet', { variant: 'error' });
+			return;
+		}
+		if (routesheetsList.length > 0) {
+			if (routesheetsList[0].routesheetNo !== routeSheetNo) {
+				enqueueSnackbar('Dont scan another route sheet', { variant: 'error' });
+				return;
+			}
+		}
+
+		const quantityToAdd = EnterQuantity;
+
+		if (currentQuantity < quantityToAdd) {
+			enqueueSnackbar('Quantity is greater than available quantity', { variant: 'error' });
+			return;
+		}
+		// Add new entry to the list
+		setRoutesheetsList((prev) => [
+			...prev,
+			{
+				routesheetNo: routeSheetNo,
+				quantity: quantityToAdd,
+				timestamp: new Date().toISOString(),
 			},
-			filterFn: (row, columnId, filterValue) => {
-				const rowDate = dayjs(row.getValue(columnId)).format('YYYY-MM-DD');
-				return rowDate === filterValue;
+		]);
+
+		// Update current quantity
+		const newQuantity = currentQuantity - EnterQuantity;
+		setCurrentQuantity(newQuantity);
+
+		// Check if completed
+		if (newQuantity === 0) {
+			enqueueSnackbar('All quantities added successfully!', { variant: 'success' });
+		}
+	};
+
+	const handlePartialSubmitApi = async () => {
+		if (routesheetsList.length === 0) {
+			enqueueSnackbar('Please Complete The Total Quantity of route sheet', { variant: 'error' });
+			return;
+		}
+		if (currentQuantity !== 0) {
+			enqueueSnackbar('Quantity is not fulfilled', { variant: 'error' });
+			return;
+		}
+		setLoading(true);
+		try {
+			await createResource(
+				'ProductionOrders/SaveSlpitPartial',
+				routesheetsList,
+				() => {
+					enqueueSnackbar('Production Order created successfully', { variant: 'success' });
+					setRouteSheetNo('');
+					setEnterQuantity(0);
+					setRoutesheetsList([]);
+					setCurrentQuantity(0);
+					setRouteSheetDetails(null);
+					SetAgainReleaseModal(false);
+				},
+				(error) => enqueueSnackbar(`Failed to create Production Order: ${error.message}`, { variant: 'error' }),
+			);
+		} catch (e) {
+			enqueueSnackbar(`Failed to save data: ${e.message}`, { variant: 'error' });
+			setRouteSheetNo('');
+			setEnterQuantity(0);
+			setRoutesheetsList([]);
+			setCurrentQuantity(0);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const columns = useMemo(
+		() => [
+			{
+				accessorKey: 'read_Date',
+				header: 'Date',
+				size: 100,
+				Cell: ({ cell }) => dayjs(cell.getValue()).format('YYYY-MM-DD'),
+				Filter: ({ column }) => {
+					const [selectedDate, setSelectedDate] = useState(null);
+
+					return (
+						<LocalizationProvider dateAdapter={AdapterDayjs}>
+							<DatePicker
+								label="Select Date"
+								value={selectedDate}
+								onChange={(newValue) => {
+									setSelectedDate(newValue);
+									column.setFilterValue(newValue ? dayjs(newValue).format('YYYY-MM-DD') : null);
+								}}
+								renderInput={(params) => <TextField {...params} size="small" variant="outlined" />}
+							/>
+						</LocalizationProvider>
+					);
+				},
+				filterFn: (row, columnId, filterValue) => {
+					const rowDate = dayjs(row.getValue(columnId)).format('YYYY-MM-DD');
+					return rowDate === filterValue;
+				},
 			},
-		},
-		{ accessorKey: 'plantcode', header: 'Project Code', size: 100 },
-		{ accessorKey: 'cuttingInstruction', header: 'Cutting  No', size: 100 },
-		{
-			accessorKey: 'routeSheetNo',
-			header: 'Route Sheet',
-			size: 120,
-			Cell: ({ cell, row }) => {
-				const [open, setOpen] = useState(false);
-				const handleOpen = () => setOpen(true);
-				const handleClose = () => setOpen(false);
+			{ accessorKey: 'plantcode', header: 'Project Code', size: 100 },
+			{
+				accessorKey: 'cuttingInstruction',
+				header: 'Cutting  No',
+				size: 100,
+				enableSorting: true,
+				enableGrouping: true,
+			},
+			{
+				accessorKey: 'routeSheetNo',
+				header: 'Route Sheet',
+				size: 120,
+				Cell: ({ cell, row }) => {
+					const [open, setOpen] = useState(false);
+					const handleOpen = () => setOpen(true);
+					const handleClose = () => setOpen(false);
 
-				return (
-					<>
-						<Button variant="text" color="primary" onClick={handleOpen} sx={{ textTransform: 'none' }}>
-							{cell.getValue()}
-						</Button>
+					return (
+						<>
+							<Button variant="text" color="primary" onClick={handleOpen} sx={{ textTransform: 'none' }}>
+								{cell.getValue()}
+							</Button>
 
-						<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
-							<DialogTitle sx={{ p: 1 }} variant="h6" bgcolor={'#f5f5f5'}>
-								Details for Route Sheet: {cell.getValue()}
-								<IconButton
-									aria-label="close"
-									onClick={handleClose}
-									sx={{
-										position: 'absolute',
-										right: 8,
-										top: 8,
-										color: (theme) => theme.palette.grey[900],
-									}}
-								>
-									<CloseOutlined />
-								</IconButton>
-							</DialogTitle>
-							<Divider />
-							<DialogContent>
-								<Grid container spacing={2}>
-									<Grid item xs={12}>
+							<Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
+								<DialogTitle sx={{ p: 1 }} variant="h6" bgcolor={'#f5f5f5'}>
+									Details for Route Sheet: {cell.getValue()}
+									<IconButton
+										aria-label="close"
+										onClick={handleClose}
+										sx={{
+											position: 'absolute',
+											right: 8,
+											top: 8,
+											color: (theme) => theme.palette.grey[900],
+										}}
+									>
+										<CloseOutlined />
+									</IconButton>
+								</DialogTitle>
+								<Divider />
+								<DialogContent>
+									<Grid container spacing={2}>
+										<Grid item xs={12}>
+											<Typography variant="h6" gutterBottom>
+												Production Information
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Work Order:</strong> {row.original.workOrderNo}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Section:</strong> {row.original.sectionCode}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Total WT:</strong> {row.original.totalWT} KG
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Status:</strong>
+												{row.original.readflag === 0 ? (
+													<Chip label="Open" color="success" size="small" />
+												) : (
+													<Chip label="Hold" color="warning" size="small" />
+												)}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Route:</strong> {row.original.routeSheetNo}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Mark No:</strong> {row.original.markNo}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Length:</strong> {row.original.length}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Width:</strong> {row.original.width}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Weight Per Kg:</strong> {row.original.weightPerKg}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Cutting Instruction:</strong> {row.original.cuttingInstruction}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Total Quantity:</strong> {row.original.totalQunty}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Batch No:</strong> {row.original.batchNo}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Batch Quantity:</strong> {row.original.batchQnty}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Embossing Number:</strong> {row.original.embosingNumber}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>CIP Number:</strong> {row.original.ciP_Number}
+											</Typography>
+										</Grid>
+										<Grid item xs={6} sm={4} md={3}>
+											<Typography variant="subtitle2">
+												<strong>Description:</strong> {row.original.sectionDesc}
+											</Typography>
+										</Grid>
+									</Grid>
+
+									<Box mt={2}>
 										<Typography variant="h6" gutterBottom>
-											Production Information
+											Production Details
 										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Work Order:</strong> {row.original.workOrderNo}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Section:</strong> {row.original.sectionCode}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Total WT:</strong> {row.original.totalWT} KG
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Status:</strong>
-											{row.original.readflag === 0 ? (
-												<Chip label="Open" color="success" size="small" />
-											) : (
-												<Chip label="Hold" color="warning" size="small" />
-											)}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Route:</strong> {row.original.routeSheetNo}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Mark No:</strong> {row.original.markNo}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Length:</strong> {row.original.length}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Width:</strong> {row.original.width}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Weight Per Kg:</strong> {row.original.weightPerKg}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Cutting Instruction:</strong> {row.original.cuttingInstruction}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Total Quantity:</strong> {row.original.totalQunty}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Batch No:</strong> {row.original.batchNo}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Batch Quantity:</strong> {row.original.batchQnty}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Embossing Number:</strong> {row.original.embosingNumber}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>CIP Number:</strong> {row.original.ciP_Number}
-										</Typography>
-									</Grid>
-									<Grid item xs={6} sm={4} md={3}>
-										<Typography variant="subtitle2">
-											<strong>Description:</strong> {row.original.sectionDesc}
-										</Typography>
-									</Grid>
-								</Grid>
-
-								<Box mt={2}>
-									<Typography variant="h6" gutterBottom>
-										Production Details
-									</Typography>
-									{row.original.details && row.original.details.length > 0 ? (
-										<Table size="small">
-											<TableHead>
-												<TableRow>
-													<TableCell>Operation Number</TableCell>
-													<TableCell>Operation Code</TableCell>
-													<TableCell>Operation Description</TableCell>
-													<TableCell>Total Qnty</TableCell>
-												</TableRow>
-											</TableHead>
-											<TableBody>
-												{row.original.details.map((detail) => (
-													<TableRow key={detail.id}>
-														<TableCell>{detail.operation_Number}</TableCell>
-														<TableCell>{detail.operation_Code}</TableCell>
-														<TableCell>{detail.operation_Description}</TableCell>
-														<TableCell>{detail.totalQunty}</TableCell>
+										{row.original.details && row.original.details.length > 0 ? (
+											<Table size="small">
+												<TableHead>
+													<TableRow>
+														<TableCell>Operation Number</TableCell>
+														<TableCell>Operation Code</TableCell>
+														<TableCell>Operation Description</TableCell>
+														<TableCell>Total Qnty</TableCell>
 													</TableRow>
-												))}
-											</TableBody>
-										</Table>
-									) : (
-										<Typography variant="body2">No production details available.</Typography>
-									)}
-								</Box>
-							</DialogContent>
-						</Dialog>
-					</>
-				);
+												</TableHead>
+												<TableBody>
+													{row.original.details.map((detail) => (
+														<TableRow key={detail.id}>
+															<TableCell>{detail.operation_Number}</TableCell>
+															<TableCell>{detail.operation_Code}</TableCell>
+															<TableCell>{detail.operation_Description}</TableCell>
+															<TableCell>{detail.totalQunty}</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										) : (
+											<Typography variant="body2">No production details available.</Typography>
+										)}
+									</Box>
+								</DialogContent>
+							</Dialog>
+						</>
+					);
+				},
 			},
-		},
-		{ accessorKey: 'markNo', header: 'Mark No', size: 180 },
-		{ accessorKey: 'workOrderNo', header: 'Work Order No', size: 150 },
-		{ accessorKey: 'pendingQnty', header: 'Pending', size: 120 },
-		{ accessorKey: 'totalQunty', header: 'Total', size: 120 },
-		{
-			accessorKey: 'isPartial',
-			header: 'isPartial',
-			size: 120,
-			Cell: ({ row }) => (
-				<Tooltip title={row.original.isPartial === 1 ? 'YES' : 'NO'}>
-					{row.original.isPartial === 1 ? (
-						<Chip label="YES" color="error" size="small" icon={<HourglassBottomRounded />} />
-					) : (
-						<Chip label="NO" color="success" size="small" icon={<PublishedWithChangesOutlined />} />
-					)}
-				</Tooltip>
-			),
-			Filter: ({ column }) => {
-				const [selectedPartial, setSelectedPartial] = useState(null);
+			{ accessorKey: 'markNo', header: 'Mark No', size: 180 },
+			{ accessorKey: 'workOrderNo', header: 'Work Order No', size: 150 },
+			{ accessorKey: 'pendingQnty', header: 'Pending', size: 120 },
+			{ accessorKey: 'totalQunty', header: 'Total', size: 120 },
+			{
+				accessorKey: 'isPartial',
+				header: 'isPartial',
+				size: 120,
+				Cell: ({ row }) => (
+					<Tooltip title={row.original.isPartial === 1 ? 'YES' : 'NO'}>
+						{row.original.isPartial === 1 ? (
+							<Chip label="YES" color="error" size="small" icon={<HourglassBottomRounded />} />
+						) : (
+							<Chip label="NO" color="success" size="small" icon={<PublishedWithChangesOutlined />} />
+						)}
+					</Tooltip>
+				),
+				Filter: ({ column }) => {
+					const [selectedPartial, setSelectedPartial] = useState(null);
 
-				const handlePartialChange = (event) => {
-					setSelectedPartial(event.target.value);
-					column.setFilterValue(event.target.value);
-				};
+					const handlePartialChange = (event) => {
+						setSelectedPartial(event.target.value);
+						column.setFilterValue(event.target.value);
+					};
 
-				return (
-					<Select value={selectedPartial} onChange={handlePartialChange} size="small" sx={{ width: '100%' }}>
-						<MenuItem value={null}>ALL</MenuItem>
-						<MenuItem value={1}>YES</MenuItem>
-						<MenuItem value={0}>NO</MenuItem>
-					</Select>
-				);
+					return (
+						<Select
+							value={selectedPartial}
+							onChange={handlePartialChange}
+							size="small"
+							sx={{ width: '100%' }}
+						>
+							<MenuItem value={null}>ALL</MenuItem>
+							<MenuItem value={1}>YES</MenuItem>
+							<MenuItem value={0}>NO</MenuItem>
+						</Select>
+					);
+				},
+				filterFn: (row, columnId, filterValue) => {
+					if (filterValue === null) {
+						return true;
+					}
+					return row.getValue(columnId) === filterValue;
+				},
 			},
-			filterFn: (row, columnId, filterValue) => {
-				if (filterValue === null) {
-					return true;
-				}
-				return row.getValue(columnId) === filterValue;
-			},
-		},
-	];
+		],
+		[],
+	);
 
 	const table = useMaterialReactTable({
 		columns,
 		data: data || [],
+		enableRowVirtualization: true,
+		enableColumnVirtualization: true,
 		initialState: {
 			density: 'compact',
 			pagination: { pageSize: 100, pageIndex: 0 },
@@ -739,14 +913,19 @@ function DataTableSection({ endpoint }) {
 				</Stack>
 				<Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
 					<Button variant="contained" startIcon={<TurnedInNotOutlined />} onClick={handleAddClick}>
-						Allot
+						Planning Release
+					</Button>
+					<Button variant="contained" startIcon={<NewReleasesOutlined />} onClick={handleReleaseAgainClick}>
+						Split Release
 					</Button>
 				</Box>
 			</Box>
 			<Box>
-				<ThemeProvider theme={tableTheme}>
-					<MaterialReactTable table={table} />
-				</ThemeProvider>
+				<Box sx={{ maxHeight: '800px', overflow: 'auto' }}>
+					<ThemeProvider theme={tableTheme}>
+						<MaterialReactTable table={table} />
+					</ThemeProvider>
+				</Box>
 			</Box>
 
 			{/* Modal */}
@@ -880,6 +1059,185 @@ function DataTableSection({ endpoint }) {
 						</Grid>
 					</Grid>
 				</DialogContent>
+			</Dialog>
+
+			{/* Again Release Modal */}
+			<Dialog open={AgainReleaseModal} onClose={() => handleReleaseAgainClose(false)} maxWidth="md" fullWidth>
+				<DialogTitle sx={{ p: 2 }} variant="h4" bgcolor={'#f5f5f5'}>
+					Split Route Sheets After Release
+					<IconButton
+						aria-label="close"
+						onClick={() => handleReleaseAgainClose(false)}
+						sx={{ position: 'absolute', right: 8, top: 8 }}
+					>
+						<CloseOutlined />
+					</IconButton>
+				</DialogTitle>
+				<Divider />
+				<DialogContent sx={{ p: 1 }}>
+					<Box
+						sx={{
+							p: 2,
+							borderLeft: `4px solid ${theme.palette.warning.main}`,
+							borderBottom: `1px solid ${theme.palette.divider}`,
+							mb: 2,
+							borderRadius: '0 4px 4px 0',
+						}}
+					>
+						<Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+							<Box
+								sx={{
+									mr: 1.5,
+									mt: 0.5,
+									color: theme.palette.warning.dark,
+									fontSize: '1.2rem',
+								}}
+							>
+								⚠️
+							</Box>
+							<Box>
+								<Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+									Important Release Considerations(Before Shop Floor Release):
+								</Typography>
+								<Box
+									component="ul"
+									sx={{
+										pl: 2.5,
+										m: 0,
+										'& li': {
+											mb: 0.5,
+											typography: 'body2',
+											color: theme.palette.text.secondary,
+										},
+									}}
+								>
+									<li>Split complete releases route sheet into multiple planning orders as needed</li>
+									<li>
+										Distribute single route sheet to mutiple different production machine before
+										shop floor release
+									</li>
+								</Box>
+							</Box>
+						</Box>
+					</Box>
+					<Box>
+						{loading ? (
+							<Box display="flex" justifyContent="center" alignItems="center" height="100%">
+								<CircularProgress />
+							</Box>
+						) : (
+							<>
+								<Grid container spacing={2} alignItems="right" justifyContent="right" mb={2}>
+									<Grid item xs={12} md={1} sm={1}>
+										<Chip label={currentQuantity} variant="filled" color="primary" />
+									</Grid>
+								</Grid>
+								<Grid container spacing={2} alignItems="center">
+									<Grid item xs={12} md={7} sm={7}>
+										<TextField
+											label="Enter or Scan Route Sheet"
+											variant="outlined"
+											fullWidth
+											size="small"
+											inputRef={routeSheetRef}
+											autoComplete="off"
+											autoCorrect="off"
+											spellCheck={false}
+											value={routeSheetNo}
+											onChange={handleInputChange}
+											placeholder="Scan or Enter Route Sheet No"
+											onKeyDown={handleKeyDown}
+										/>
+									</Grid>
+									<Grid item xs={12} md={3} sm={3}>
+										<TextField
+											id="outlined-read-only-input"
+											label="Quantity"
+											fullWidth
+											size="small"
+											value={EnterQuantity}
+											type="number"
+											onChange={(e) => setEnterQuantity(e.target.value)}
+										/>
+									</Grid>
+									<Grid item xs={12} md={2} sm={2}>
+										<Button
+											variant="contained"
+											fullWidth
+											endIcon={<AddOutlined />}
+											onClick={handlePartialAddClick}
+										>
+											Add
+										</Button>
+									</Grid>
+								</Grid>
+								{routesheetsList.length > 0 && (
+									<Box mt={4}>
+										<Typography variant="h6" gutterBottom>
+											Added Routesheets
+										</Typography>
+										<TableContainer component={Paper} variant="outlined">
+											<Table size="small">
+												<TableHead>
+													<TableRow>
+														<TableCell>
+															<b>#</b>
+														</TableCell>
+														<TableCell>
+															<b>Route Sheet</b>
+														</TableCell>
+														<TableCell>
+															<b>Quantity</b>
+														</TableCell>
+														<TableCell>
+															<b>Timestamp</b>
+														</TableCell>
+													</TableRow>
+												</TableHead>
+												<TableBody>
+													{routesheetsList.map((item, index) => (
+														<TableRow key={index} hover>
+															<TableCell>{index + 1}</TableCell>
+															<TableCell>{item.routesheetNo}</TableCell>
+															<TableCell>{item.quantity}</TableCell>
+															<TableCell>
+																{new Date(item.timestamp).toLocaleString()}
+															</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										</TableContainer>
+									</Box>
+								)}
+							</>
+						)}
+					</Box>
+				</DialogContent>
+				<Divider />
+				<DialogActions>
+					<Grid item xs={12} md={4}>
+						<Button
+							variant="outlined"
+							color="error"
+							fullWidth
+							startIcon={<CloseOutlined />}
+							onClick={handleReleaseAgainClose}
+						>
+							Close
+						</Button>
+					</Grid>
+					<Grid item xs={12} md={4}>
+						<Button
+							variant="contained"
+							fullWidth
+							endIcon={<DoneAllOutlined />}
+							onClick={handlePartialSubmitApi}
+						>
+							Add to Partial
+						</Button>
+					</Grid>
+				</DialogActions>
 			</Dialog>
 		</Card>
 	);
