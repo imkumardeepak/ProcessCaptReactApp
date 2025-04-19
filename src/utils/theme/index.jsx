@@ -12,11 +12,42 @@ import { useSelector } from '@/store';
 const getTheme = () => {
 	const { mode, borderRadius } = useSelector(selectThemeConfig);
 
-	// make a default theme or change theme by your prefered state manager redux/context/zustand...
+	const baseTypography = themeTypography(); // Get base typography config
 
 	const themeOptions = {
 		palette: themePalette(mode),
-		typography: themeTypography(),
+		typography: {
+			...baseTypography, // Spread the base typography
+			// Add mobile-specific overrides
+			h1: {
+				...baseTypography.h1,
+				fontSize: '2.5rem',
+				'@media (max-width:600px)': {
+					fontSize: '2rem',
+				},
+			},
+			h2: {
+				...baseTypography.h2,
+				fontSize: '2rem',
+				'@media (max-width:600px)': {
+					fontSize: '1.75rem',
+				},
+			},
+			body1: {
+				...baseTypography.body1,
+				fontSize: '1rem',
+				'@media (max-width:600px)': {
+					fontSize: '1.1rem',
+				},
+			},
+			button: {
+				...baseTypography.button,
+				fontSize: '1rem',
+				'@media (max-width:600px)': {
+					fontSize: '1.1rem',
+				},
+			},
+		},
 		components: componentStyleOverrides(mode),
 		spacing: 8,
 		shape: {
@@ -25,7 +56,6 @@ const getTheme = () => {
 		breakpoints: {
 			values: {
 				xs: 0,
-				// smartphone
 				sp: 400,
 				sm: 600,
 				md: 900,
@@ -34,10 +64,14 @@ const getTheme = () => {
 			},
 		},
 	};
+
 	const theme = createTheme(themeOptions, esES);
+
+	// Add custom shadows
 	theme.shadows[25] = '0px 10px 10px -15px #0005';
 	theme.shadows[26] = '0px 15px 10px -15px #0003';
 	theme.shadows[27] = '0px 15px 12px -15px #0004';
+
 	return theme;
 };
 

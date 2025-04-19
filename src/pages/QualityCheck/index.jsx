@@ -288,6 +288,31 @@ function QCCheckForm() {
 								</InputAdornment>
 							),
 						}}
+						sx={{
+							'& .MuiOutlinedInput-root': {
+								backgroundColor: '#FFEBEE', // Light red
+								'&:hover .MuiOutlinedInput-notchedOutline': {
+									borderColor: '#D32F2F',
+								},
+								'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+									borderColor: '#D32F2F',
+								},
+							},
+							'& .MuiInputLabel-outlined': {
+								color: '#D32F2F',
+								'&.Mui-focused': {
+									color: '#D32F2F',
+									fontWeight: 'bold',
+								},
+							},
+							'& .MuiOutlinedInput-input': {
+								color: '#B71C1C',
+								'&::placeholder': {
+									color: '#E57373',
+									opacity: 1,
+								},
+							},
+						}}
 					/>
 				</Box>
 
@@ -319,9 +344,33 @@ function QCCheckForm() {
 								fullWidth
 								type="number"
 								InputProps={{
-									readOnly: true,
-									inputMode: 'numeric',
-									pattern: '[0-9]*',
+									readOnly: true, // Proper MUI readOnly prop
+								}}
+								slotProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										backgroundColor: '#ECEFF1', // Light slate
+										'&:hover .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#607D8B',
+										},
+										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#607D8B',
+										},
+									},
+									'& .MuiInputLabel-outlined': {
+										color: '#607D8B',
+										'&.Mui-focused': {
+											color: '#607D8B',
+											fontWeight: 'bold',
+										},
+									},
+									'& .MuiOutlinedInput-input': {
+										color: '#455A64',
+										'&::placeholder': {
+											color: '#90A4AE',
+											opacity: 1,
+										},
+									},
 								}}
 								value={checkQuantity}
 								placeholder="Check Quantity"
@@ -335,6 +384,31 @@ function QCCheckForm() {
 								onChange={handlePersonQRCodeChange}
 								placeholder="Scan Person QR Code"
 								onKeyDown={validPersonQRCode}
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										backgroundColor: '#FFF8E1', // Light amber
+										'&:hover .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#FFA000',
+										},
+										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#FFA000',
+										},
+									},
+									'& .MuiInputLabel-outlined': {
+										color: '#FFA000',
+										'&.Mui-focused': {
+											color: '#FFA000',
+											fontWeight: 'bold',
+										},
+									},
+									'& .MuiOutlinedInput-input': {
+										color: '#E65100',
+										'&::placeholder': {
+											color: '#FFB74D',
+											opacity: 1,
+										},
+									},
+								}}
 							/>
 							<FormControl fullWidth>
 								<InputLabel id="disposition-label">Disposition</InputLabel>
@@ -361,7 +435,32 @@ function QCCheckForm() {
 							value={remarks}
 							onChange={handleRemarksChange}
 							placeholder="Enter Remarks"
-							sx={{ mb: 2 }}
+							sx={{
+								mb: 2,
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#E8F5E9', // Light green
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#4CAF50',
+									'&.Mui-focused': {
+										color: '#4CAF50',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#2E7D32',
+									'&::placeholder': {
+										color: '#A5D6A7',
+										opacity: 1,
+									},
+								},
+							}}
 						/>
 
 						<TableContainer component={Paper}>

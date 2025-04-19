@@ -16,21 +16,12 @@ import {
 	Paper,
 	CircularProgress,
 	Grid, // Import Grid
-	Alert,
-	styled, // Import Alert
-	InputAdornment,
-	IconButton,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	Divider,
+	styled,
 } from '@mui/material';
 import { useSnackbar } from 'notistack'; // Import useSnackbar
-import CardHeader1 from '@/components/cardHeader';
 import { useApi } from '@/services/machineAPIService';
 import useCurrentShift from '@/utils/hooks/useCurrentShift';
 import ConfirmButton from '@/components/ConfirmationBox/ConfirmButton';
-import { CloseOutlined, InfoOutlined, CheckCircleOutline } from '@mui/icons-material';
 
 function ProcessQCCheckBulk() {
 	return (
@@ -284,7 +275,6 @@ function QCCheckFormBulk() {
 				nextMachineNo: nextmachineDetails?.machineID || '',
 				remarks: remarks || 'NA',
 			};
-			console.log(dataToSend);
 
 			await createResource(
 				'ProcessingOrders/Bulksave',
@@ -340,6 +330,31 @@ function QCCheckFormBulk() {
 							onChange={(e) => setMachineQRCode(e.target.value)}
 							placeholder="Scan or Enter Machine Code"
 							onKeyDown={handleMachineQRCodeChange}
+							sx={{
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#EEEEEE', // Light gray
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#424242',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#424242',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#424242',
+									'&.Mui-focused': {
+										color: '#424242',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#212121',
+									'&::placeholder': {
+										color: '#9E9E9E',
+										opacity: 1,
+									},
+								},
+							}}
 						/>
 					</Grid>
 
@@ -353,6 +368,31 @@ function QCCheckFormBulk() {
 							onChange={handlePersonQRCodeChange}
 							placeholder="Scan Person QR Code"
 							onKeyDown={validPersonQRCode}
+							sx={{
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#FFF8E1', // Light amber
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#FFA000',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#FFA000',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#FFA000',
+									'&.Mui-focused': {
+										color: '#FFA000',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#E65100',
+									'&::placeholder': {
+										color: '#FFB74D',
+										opacity: 1,
+									},
+								},
+							}}
 						/>
 					</Grid>
 					<Grid item xs={12} sm={6} md={6} lg={6}>
@@ -363,7 +403,31 @@ function QCCheckFormBulk() {
 							value={remarks}
 							onChange={handleRemarksChange}
 							placeholder="Enter Remarks"
-							sx={{ mb: 2 }}
+							sx={{
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#E8F5E9', // Light green
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#4CAF50',
+									'&.Mui-focused': {
+										color: '#4CAF50',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#2E7D32',
+									'&::placeholder': {
+										color: '#A5D6A7',
+										opacity: 1,
+									},
+								},
+							}}
 						/>
 					</Grid>
 				</Grid>
@@ -381,6 +445,31 @@ function QCCheckFormBulk() {
 							onChange={handleInputChange}
 							placeholder="Scan or Enter Route Sheet No"
 							onKeyDown={handleKeyDown}
+							sx={{
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#FFEBEE', // Light red
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#D32F2F',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#D32F2F',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#D32F2F',
+									'&.Mui-focused': {
+										color: '#D32F2F',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#B71C1C',
+									'&::placeholder': {
+										color: '#E57373',
+										opacity: 1,
+									},
+								},
+							}}
 						/>
 					</Grid>
 				</Grid>

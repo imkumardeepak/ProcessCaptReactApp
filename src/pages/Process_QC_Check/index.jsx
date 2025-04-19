@@ -588,9 +588,6 @@ function QCCheckForm() {
 						variant="outlined"
 						fullWidth
 						inputRef={routeSheetRef}
-						autoComplete="off"
-						autoCorrect="off"
-						spellCheck={false}
 						value={routeSheetNo}
 						onChange={handleInputChange}
 						placeholder="Scan or Enter Route Sheet No"
@@ -603,6 +600,31 @@ function QCCheckForm() {
 									</IconButton>
 								</InputAdornment>
 							),
+						}}
+						sx={{
+							'& .MuiOutlinedInput-root': {
+								backgroundColor: '#FFEBEE', // Light red
+								'&:hover .MuiOutlinedInput-notchedOutline': {
+									borderColor: '#D32F2F',
+								},
+								'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+									borderColor: '#D32F2F',
+								},
+							},
+							'& .MuiInputLabel-outlined': {
+								color: '#D32F2F',
+								'&.Mui-focused': {
+									color: '#D32F2F',
+									fontWeight: 'bold',
+								},
+							},
+							'& .MuiOutlinedInput-input': {
+								color: '#B71C1C',
+								'&::placeholder': {
+									color: '#E57373',
+									opacity: 1,
+								},
+							},
 						}}
 					/>
 				</Box>
@@ -627,6 +649,31 @@ function QCCheckForm() {
 									label="Machine Code"
 									variant="outlined"
 									fullWidth
+									sx={{
+										'& .MuiOutlinedInput-root': {
+											backgroundColor: '#EEEEEE', // Light gray
+											'&:hover .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#424242',
+											},
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#424242',
+											},
+										},
+										'& .MuiInputLabel-outlined': {
+											color: '#424242',
+											'&.Mui-focused': {
+												color: '#424242',
+												fontWeight: 'bold',
+											},
+										},
+										'& .MuiOutlinedInput-input': {
+											color: '#212121',
+											'&::placeholder': {
+												color: '#9E9E9E',
+												opacity: 1,
+											},
+										},
+									}}
 									inputRef={machineQRRef}
 									value={machineQRCode}
 									onChange={(e) => setMachineQRCode(e.target.value)}
@@ -642,9 +689,36 @@ function QCCheckForm() {
 									fullWidth
 									type="number"
 									value={checkQuantity}
-									onChange={handleCheckQuantityChange}
 									placeholder="Enter Check Quantity"
-									inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+									InputProps={{
+										readOnly: true, // Proper MUI readOnly prop
+									}}
+									slotProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+									sx={{
+										'& .MuiOutlinedInput-root': {
+											backgroundColor: '#ECEFF1', // Light slate
+											'&:hover .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#607D8B',
+											},
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#607D8B',
+											},
+										},
+										'& .MuiInputLabel-outlined': {
+											color: '#607D8B',
+											'&.Mui-focused': {
+												color: '#607D8B',
+												fontWeight: 'bold',
+											},
+										},
+										'& .MuiOutlinedInput-input': {
+											color: '#455A64',
+											'&::placeholder': {
+												color: '#90A4AE',
+												opacity: 1,
+											},
+										},
+									}}
 								/>
 							</Grid>
 
@@ -653,6 +727,31 @@ function QCCheckForm() {
 									label="Person QR Code"
 									variant="outlined"
 									fullWidth
+									sx={{
+										'& .MuiOutlinedInput-root': {
+											backgroundColor: '#FFF8E1', // Light amber
+											'&:hover .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#FFA000',
+											},
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+												borderColor: '#FFA000',
+											},
+										},
+										'& .MuiInputLabel-outlined': {
+											color: '#FFA000',
+											'&.Mui-focused': {
+												color: '#FFA000',
+												fontWeight: 'bold',
+											},
+										},
+										'& .MuiOutlinedInput-input': {
+											color: '#E65100',
+											'&::placeholder': {
+												color: '#FFB74D',
+												opacity: 1,
+											},
+										},
+									}}
 									inputRef={personQRRef}
 									value={personQRCode}
 									onChange={handlePersonQRCodeChange}
@@ -678,6 +777,31 @@ function QCCheckForm() {
 											onChange={(e) => setNextMachineQRCode(e.target.value)}
 											placeholder="Scan or Enter Machine Code"
 											onKeyDown={handleNextMachineQRCodeChange}
+											sx={{
+												'& .MuiOutlinedInput-root': {
+													backgroundColor: '#FFF3E0', // Light coral
+													'&:hover .MuiOutlinedInput-notchedOutline': {
+														borderColor: '#E64A19',
+													},
+													'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+														borderColor: '#E64A19',
+													},
+												},
+												'& .MuiInputLabel-outlined': {
+													color: '#E64A19',
+													'&.Mui-focused': {
+														color: '#E64A19',
+														fontWeight: 'bold',
+													},
+												},
+												'& .MuiOutlinedInput-input': {
+													color: '#BF360C',
+													'&::placeholder': {
+														color: '#FF8A65',
+														opacity: 1,
+													},
+												},
+											}}
 										/>
 									</Grid>
 								)}
@@ -689,11 +813,36 @@ function QCCheckForm() {
 							variant="outlined"
 							fullWidth
 							multiline
+							sx={{
+								mb: 2,
+								'& .MuiOutlinedInput-root': {
+									backgroundColor: '#E8F5E9', // Light green
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#4CAF50',
+									},
+								},
+								'& .MuiInputLabel-outlined': {
+									color: '#4CAF50',
+									'&.Mui-focused': {
+										color: '#4CAF50',
+										fontWeight: 'bold',
+									},
+								},
+								'& .MuiOutlinedInput-input': {
+									color: '#2E7D32',
+									'&::placeholder': {
+										color: '#A5D6A7',
+										opacity: 1,
+									},
+								},
+							}}
 							rows={2}
 							value={remarks}
 							onChange={handleRemarksChange}
 							placeholder="Enter Remarks"
-							sx={{ mb: 2 }}
 						/>
 
 						<TableContainer component={Paper}>
