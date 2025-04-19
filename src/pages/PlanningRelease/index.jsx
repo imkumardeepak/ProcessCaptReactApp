@@ -1157,7 +1157,33 @@ function DataTableSection({ endpoint }) {
 											size="small"
 											value={EnterQuantity}
 											type="number"
-											onChange={(e) => setEnterQuantity(e.target.value)}
+											onChange={(e) => {
+												const value = parseInt(e.target.value);
+
+												// Handle empty string case
+												if (e.target.value === '') {
+													setEnterQuantity('');
+													return;
+												}
+
+												// Validate input
+												if (isNaN(value) || value < 0) {
+													setEnterQuantity(0);
+													return;
+												}
+
+												// Prevent exceeding available quantity
+												if (value > currentQuantity) {
+													setEnterQuantity(currentQuantity);
+													return;
+												}
+
+												setEnterQuantity(value);
+											}}
+											slotProps={{
+												min: 0,
+												max: currentQuantity,
+											}}
 										/>
 									</Grid>
 									<Grid item xs={12} md={2} sm={2}>
