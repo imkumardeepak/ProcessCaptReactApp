@@ -422,21 +422,6 @@ function QCCheckForm() {
 			return;
 		}
 
-		if (
-			productionDetails &&
-			productionDetails.details &&
-			productionDetails.details.length > 0 &&
-			details &&
-			details.details &&
-			details.details.length > 0 &&
-			details.details.some((detail) => detail.totalQunty === Number(checkQuantity)) &&
-			!nextmachineDetails
-		) {
-			enqueueSnackbar('Please scan the next machine code first...', { variant: 'warning' });
-			setLoading(false);
-			return;
-		}
-
 		try {
 			const dataToSend = {
 				routeSheetNo: details.routeSheetNo,
@@ -445,7 +430,7 @@ function QCCheckForm() {
 				shift: currentShift,
 				checkQuantity,
 				machineNo: machineDetails.machineID,
-				nextMachineNo: nextmachineDetails?.machineID || '',
+				nextMachineNo: nextmachineDetails?.machineID,
 				remarks,
 				details: details.details, // Use the filtered details here
 			};

@@ -90,11 +90,8 @@ function DataTableSection({ endpoint }) {
 	const [currentQuantity, setCurrentQuantity] = useState(0);
 	const [EnterQuantity, setEnterQuantity] = useState(0);
 	const routeSheetRef = useRef(null);
-	const fetchCallback = useCallback(
-		debounce(() => fetchData(endpoint), 300),
-		[fetchData, endpoint],
-	);
-	const { data, isLoading, error, refetch } = useData(endpoint, fetchCallback);
+
+	const { data, isLoading, error, refetch } = useData(endpoint, () => fetchData(endpoint));
 
 	const {
 		register,
@@ -105,6 +102,10 @@ function DataTableSection({ endpoint }) {
 	} = useForm();
 
 	const inputRef = useRef(null);
+
+	useEffect(() => {
+		console.log(data);
+	}, [data]);
 
 	useEffect(() => {
 		if (modalOpen) {
@@ -605,12 +606,7 @@ function DataTableSection({ endpoint }) {
 								</DialogTitle>
 								<Divider />
 								<DialogContent>
-									<Grid container spacing={2}>
-										<Grid item xs={12}>
-											<Typography variant="h6" gutterBottom>
-												Production Information
-											</Typography>
-										</Grid>
+									<Grid container spacing={1}>
 										<Grid item xs={6} sm={4} md={3}>
 											<Typography variant="subtitle2">
 												<strong>Work Order:</strong> {row.original.workOrderNo}
@@ -673,56 +669,74 @@ function DataTableSection({ endpoint }) {
 										</Grid>
 										<Grid item xs={6} sm={4} md={3}>
 											<Typography variant="subtitle2">
-												<strong>Batch No:</strong> {row.original.batchNo}
-											</Typography>
-										</Grid>
-										<Grid item xs={6} sm={4} md={3}>
-											<Typography variant="subtitle2">
-												<strong>Batch Quantity:</strong> {row.original.batchQnty}
-											</Typography>
-										</Grid>
-										<Grid item xs={6} sm={4} md={3}>
-											<Typography variant="subtitle2">
-												<strong>Embossing Number:</strong> {row.original.embosingNumber}
-											</Typography>
-										</Grid>
-										<Grid item xs={6} sm={4} md={3}>
-											<Typography variant="subtitle2">
-												<strong>CIP Number:</strong> {row.original.ciP_Number}
-											</Typography>
-										</Grid>
-										<Grid item xs={6} sm={4} md={3}>
-											<Typography variant="subtitle2">
-												<strong>Description:</strong> {row.original.sectionDesc}
+												<Typography variant="subtitle2">
+													<strong>Description:</strong> {row.original.sectionDesc}
+												</Typography>
 											</Typography>
 										</Grid>
 									</Grid>
 
 									<Box mt={2}>
-										<Typography variant="h6" gutterBottom>
-											Production Details
-										</Typography>
-										{row.original.details && row.original.details.length > 0 ? (
+										{row.original.batchDetails && row.original.batchDetails.length > 0 ? (
 											<Table size="small">
 												<TableHead>
 													<TableRow>
-														<TableCell>Operation Number</TableCell>
-														<TableCell>Operation Code</TableCell>
-														<TableCell>Operation Description</TableCell>
-														<TableCell>Total Qnty</TableCell>
+														<TableCell>Batch No</TableCell>
+														<TableCell>Batch Qnty</TableCell>
+														<TableCell>CIP_Number</TableCell>
+														<TableCell>EmbosingNumber</TableCell>
 													</TableRow>
 												</TableHead>
 												<TableBody>
-													{row.original.details.map((detail) => (
+													{row.original.batchDetails.map((detail) => (
 														<TableRow key={detail.id}>
-															<TableCell>{detail.operation_Number}</TableCell>
-															<TableCell>{detail.operation_Code}</TableCell>
-															<TableCell>{detail.operation_Description}</TableCell>
-															<TableCell>{detail.totalQunty}</TableCell>
+															<TableCell>{detail.batchNo}</TableCell>
+															<TableCell>{detail.batchQnty}</TableCell>
+															<TableCell>{detail.ciP_Number}</TableCell>
+															<TableCell>{detail.embosingNumber}</TableCell>
 														</TableRow>
 													))}
 												</TableBody>
 											</Table>
+										) : (
+											<Typography variant="body2">No production details available.</Typography>
+										)}
+									</Box>
+
+									<Box mt={2}>
+										{/* Production Details Table */}
+										{row.original.details?.length > 0 ? (
+											<Box mt={2}>
+												<Typography variant="h6">Production Details</Typography>
+												<Table size="small">
+													<TableHead>
+														<TableRow>
+															<TableCell>
+																<strong>Operation Number</strong>
+															</TableCell>
+															<TableCell>
+																<strong>Operation Code</strong>
+															</TableCell>
+															<TableCell>
+																<strong>Operation Description</strong>
+															</TableCell>
+															<TableCell>
+																<strong>Total Qty</strong>
+															</TableCell>
+														</TableRow>
+													</TableHead>
+													<TableBody>
+														{row.original.details.map((detail, index) => (
+															<TableRow key={index}>
+																<TableCell>{detail.operation_Number}</TableCell>
+																<TableCell>{detail.operation_Code}</TableCell>
+																<TableCell>{detail.operation_Description}</TableCell>
+																<TableCell>{detail.totalQunty}</TableCell>
+															</TableRow>
+														))}
+													</TableBody>
+												</Table>
+											</Box>
 										) : (
 											<Typography variant="body2">No production details available.</Typography>
 										)}
@@ -794,6 +808,7 @@ function DataTableSection({ endpoint }) {
 		enableRowSelection: true,
 		enableColumnResizing: true,
 		enableRowNumbers: true,
+		enableGrouping: true,
 		onRowSelectionChange: setRowSelection, // This handles both selection and deselection
 		state: {
 			rowSelection, // Pass the row selection state back to the table

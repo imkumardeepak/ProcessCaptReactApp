@@ -99,6 +99,7 @@ function DataTableSection({ endpoint }) {
 		try {
 			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
 			setModalData(response);
+			console.log('response : ', response);
 			setOpen(true);
 		} catch (err) {
 			console.error('Error fetching details:', err);
@@ -110,6 +111,7 @@ function DataTableSection({ endpoint }) {
 			enqueueSnackbar('Please scan both Machine and Route Sheet!', { variant: 'warning' });
 			return;
 		}
+		setFetchLoading(true);
 		try {
 			const validRouteSheet = data.find((item) => item.routeSheetNo === routeSheetNo);
 			if (!validRouteSheet) {
@@ -154,6 +156,8 @@ function DataTableSection({ endpoint }) {
 			enqueueSnackbar('Failed to release production. See console for details.', {
 				variant: 'error',
 			});
+		} finally {
+			setFetchLoading(false);
 		}
 	};
 
@@ -486,26 +490,6 @@ function DataTableSection({ endpoint }) {
 							</Grid>
 							<Grid item xs={6} sm={4} md={3}>
 								<Typography modalData>
-									<strong>Batch No:</strong> {modalData.batchNo}
-								</Typography>
-							</Grid>
-							<Grid item xs={6} sm={4} md={3}>
-								<Typography modalData>
-									<strong>Batch Quantity:</strong> {modalData.batchQnty}
-								</Typography>
-							</Grid>
-							<Grid item xs={6} sm={4} md={3}>
-								<Typography modalData>
-									<strong>Embossing Number:</strong> {modalData.embosingNumber}
-								</Typography>
-							</Grid>
-							<Grid item xs={6} sm={4} md={3}>
-								<Typography modalData>
-									<strong>CIP Number:</strong> {modalData.ciP_Number}
-								</Typography>
-							</Grid>
-							<Grid item xs={6} sm={4} md={3}>
-								<Typography modalData>
 									<strong>Description:</strong> {modalData.sectionDesc}
 								</Typography>
 							</Grid>
@@ -514,6 +498,33 @@ function DataTableSection({ endpoint }) {
 						<Typography variant="body2">No data available.</Typography>
 					)}
 
+					<Box mt={2}>
+						<Typography variant="h4">Batch Details</Typography>
+						{modalData?.batchDetails && modalData?.batchDetails?.length > 0 ? (
+							<Table size="small">
+								<TableHead>
+									<TableRow>
+										<TableCell>Batch No</TableCell>
+										<TableCell>Batch Qnty</TableCell>
+										<TableCell>CiP_Number</TableCell>
+										<TableCell>EmbosingNumber</TableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{modalData?.batchDetails?.map((detail) => (
+										<TableRow key={detail.id}>
+											<TableCell>{detail.batchNo}</TableCell>
+											<TableCell>{detail.batchQnty}</TableCell>
+											<TableCell>{detail.ciP_Number}</TableCell>
+											<TableCell>{detail.embosingNumber}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						) : (
+							<Typography variant="body2">No production details available.</Typography>
+						)}
+					</Box>
 					{/* Production Details Table */}
 					{modalData?.details?.length > 0 ? (
 						<Box mt={2}>
@@ -716,7 +727,7 @@ function DataTableSection({ endpoint }) {
 						<Grid item xs={12}>
 							<ConfirmButton
 								onConfirm={handleRelease} // Pass handleRelease function
-								isLoading={isLoading} // You can manage loading state here if needed
+								isLoading={fetchLoading} // You can manage loading state here if needed
 								buttonText="Confirm Release"
 								confirmText="Are you sure you want to release this production order?"
 							/>

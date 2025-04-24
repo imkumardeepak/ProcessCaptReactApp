@@ -208,6 +208,7 @@ function DataTableSection({ endpoint }) {
 					<MenuItem value="0">IN-PROCESS</MenuItem>
 					<MenuItem value="1">COMPLETED</MenuItem>
 					<MenuItem value="2">ON-HOLD</MenuItem>
+					<MenuItem value="3">CANCELLED</MenuItem>
 				</Select>
 			),
 			// Existing Cell render
@@ -218,13 +219,17 @@ function DataTableSection({ endpoint }) {
 							? 'IN-PROCESS'
 							: row.original.isCompleted === 1
 								? 'COMPLETED'
-								: 'ON-HOLD'
+								: row.original.isCompleted === 3
+									? 'CANCELLED'
+									: 'ON-HOLD'
 					}
 				>
 					{row.original.isCompleted === 0 ? (
 						<Chip label="IN-PROCESS" color="warning" size="small" />
 					) : row.original.isCompleted === 1 ? (
 						<Chip label="COMPLETED" color="success" size="small" />
+					) : row.original.isCompleted === 3 ? (
+						<Chip label="CANCELLED" color="error" size="small" />
 					) : (
 						<Chip label="ON-HOLD" color="error" size="small" />
 					)}

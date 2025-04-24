@@ -375,6 +375,10 @@ function EmployeeForm({ employeeDetails, onClose, type }) {
 					<Grid item xs={12} sm={6}>
 						<TextField label="QR Code" {...register('qrcode')} fullWidth margin="normal" />
 					</Grid>
+					{/* personnel_Number */}
+					<Grid item xs={12} sm={6}>
+						<TextField label="Personnel No" {...register('personnel_Number')} fullWidth margin="normal" />
+					</Grid>
 				</Grid>
 
 				{/* Submit Buttons */}

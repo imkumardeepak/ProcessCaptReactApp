@@ -272,7 +272,7 @@ function QCCheckFormBulk() {
 				personQRCode: employeeDetails.empName,
 				shift: currentShift,
 				machineNo: machineDetails.machineID,
-				nextMachineNo: nextmachineDetails?.machineID || '',
+				nextMachineNo: nextmachineDetails?.machineID,
 				remarks: remarks || 'NA',
 			};
 
