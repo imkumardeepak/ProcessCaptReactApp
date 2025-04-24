@@ -252,9 +252,54 @@ function DataTableSection({ endpoint }) {
 		{ accessorKey: 'totalWt', header: 'Total Wt', size: 80 },
 		{ accessorKey: 'length', header: 'Length', size: 100 },
 		{ accessorKey: 'width', header: 'Width', size: 100 },
-		{ accessorKey: 'batch', header: 'Batch', size: 110 },
-		{ accessorKey: 'cip', header: 'CIP', size: 110 },
-		{ accessorKey: 'embosing', header: 'Embosing', size: 110 },
+		{
+			accessorKey: 'batch',
+			header: 'Batch',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.batchNo).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
+		},
+		{
+			accessorKey: 'cip',
+			header: 'CIP',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.ciP_Number).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
+		},
+		{
+			accessorKey: 'embosing',
+			header: 'Embosing',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.embosingNumber).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
+		},
 		{
 			accessorKey: 'process_Date',
 			header: 'SFR Date',

@@ -5,6 +5,7 @@ import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, TextField, Toolt
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import React from 'react';
 import { useEffect, useState } from 'react';
 
 function RouteSheetSummaryReport() {
@@ -131,22 +132,52 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
-			accessorKey: 'batchno',
-			header: 'Batch No',
-			size: 120,
-			enableSorting: false,
+			accessorKey: 'batch',
+			header: 'Batch',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.batchNo).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 		{
-			accessorKey: 'embos',
-			header: 'Embossing',
-			size: 120,
-			enableSorting: false,
+			accessorKey: 'cip',
+			header: 'CIP',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.ciP_Number).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 		{
-			accessorKey: 'cipNo',
-			header: 'CIP No',
-			size: 120,
-			enableSorting: false,
+			accessorKey: 'embosing',
+			header: 'Embosing',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.embosingNumber).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 	];
 

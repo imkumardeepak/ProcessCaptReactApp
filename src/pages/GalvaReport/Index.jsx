@@ -1,8 +1,8 @@
+import { useEffect, useState } from 'react';
 import DataTable from '@/components/dataTable/Example';
 import PageHeader from '@/components/pageHeader';
 import { useApi } from '@/services/machineAPIService';
-import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
 
 function GalvaReport() {
 	return (
@@ -141,22 +141,52 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
-			accessorKey: 'batchno',
+			accessorKey: 'batch',
 			header: 'Batch',
-			size: 120,
-			enableSorting: false,
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.batchNo).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 		{
-			accessorKey: 'embos',
-			header: 'Embos',
-			size: 120,
-			enableSorting: false,
+			accessorKey: 'cip',
+			header: 'CIP',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.ciP_Number).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 		{
-			accessorKey: 'cipNo',
-			header: 'CIP No',
-			size: 120,
-			enableSorting: false,
+			accessorKey: 'embosing',
+			header: 'Embosing',
+			size: 110,
+			Cell: ({ row }) => {
+				const batches = row.original.batchDetails || [];
+				// Extract batch names and join with commas
+				const batchList = batches.map((item) => item.embosingNumber).join(', ');
+
+				return (
+					<Tooltip title={batchList}>
+						<span>{batchList}</span>
+					</Tooltip>
+				);
+			},
 		},
 	];
 	// Render Loading/Error States
