@@ -183,7 +183,7 @@ function QCCheckFormBulk() {
 				if (!response || response.message === 'Employee not found.') {
 					enqueueSnackbar('Employee not found.', { variant: 'error' });
 					setPersonQRCode('');
-				} else if (response.designation.includes('PROCESSCAPT') || response.designation.includes('ADMIN')) {
+				} else if (response.designation.includes('PROCESS') || response.designation.includes('ADMIN')) {
 					enqueueSnackbar('Employee found.', { variant: 'success' });
 					setEmployeeDetails(response);
 					console.log(response);

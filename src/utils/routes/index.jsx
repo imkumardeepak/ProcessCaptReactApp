@@ -205,7 +205,7 @@ function Router() {
 								<Route
 									path="processqccheckbulk"
 									element={
-										<ProtectedRoute requiredRole={['SUPERADMIN', 'ADMIN']}>
+										<ProtectedRoute requiredRole={['SUPERADMIN', 'ADMIN', 'PROCESS CAPT']}>
 											<ProcessQCCheckBulk />
 										</ProtectedRoute>
 									}
