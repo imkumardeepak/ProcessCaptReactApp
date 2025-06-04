@@ -29,6 +29,7 @@ function StatsSection() {
 
 	useEffect(() => {
 		if (usersData) {
+			console.log(usersData);
 			setDisplayData(usersData);
 		} else {
 			setDisplayData([]);
@@ -46,6 +47,14 @@ function StatsSection() {
 	};
 
 	const STATS_DATA = [
+		{
+			id: 9,
+			color: '#205781',
+			name: 'Pending Routesheet',
+			total: displayData.pendingPlanningReleaseRoutesheet || 0,
+			Icon: ContentPasteSearchOutlined,
+			redirectTo: '/pages/statusreport', // Add route
+		},
 		{
 			id: 1,
 			color: '#006BFF',
@@ -116,7 +125,7 @@ function StatsSection() {
 		<section>
 			<Grid container spacing={2}>
 				{STATS_DATA.map((stat) => (
-					<Grid item xs={12} sm={6} md={3} key={stat.id}>
+					<Grid item xs={12} sm={4} md={4} key={stat.id}>
 						{isLoading ? (
 							<Skeleton variant="rectangular" height={100} animation="wave" />
 						) : (

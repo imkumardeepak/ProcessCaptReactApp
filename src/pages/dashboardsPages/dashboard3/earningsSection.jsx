@@ -3,12 +3,9 @@ import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import { useApi } from '@/services/machineAPIService';
 import useData from '@/utils/hooks/useData';
-
 import { useTheme } from '@mui/material/styles';
-
 import Chart from 'react-apexcharts';
 import getDefaultChartsColors from '@helpers/getDefaultChartsColors';
-
 import CardHeader from '@/components/cardHeader';
 import { Skeleton, Typography } from '@mui/material';
 
@@ -28,7 +25,7 @@ function EarningsSection() {
 
 	const getCustomerGraphConfig = (config) => ({
 		options: {
-			colors: getDefaultChartsColors(3),
+			colors: getDefaultChartsColors(5),
 			chart: {
 				...(config?.mode === 'dark' && { foreColor: '#fff' }),
 				toolbar: {
@@ -77,7 +74,7 @@ function EarningsSection() {
 								},
 							},
 							total: {
-								show: true,
+								show: false,
 							},
 						},
 					},
@@ -108,7 +105,7 @@ function EarningsSection() {
 					series={chartConfig.series}
 					type="donut"
 					width="100%"
-					height={250}
+					height="70%"
 				/>
 			)}
 		</Card>
