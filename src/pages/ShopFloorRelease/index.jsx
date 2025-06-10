@@ -225,7 +225,7 @@ function DataTableSection({ endpoint }) {
 				try {
 					const [detailsResponse, loadResponse] = await Promise.all([
 						fetchData(`MachineDetails/${scannedMachineCode}`),
-						fetchData(`Report/GetMachineLoadStatus?MachineNo=${scannedMachineCode}`),
+						fetchData(`Report/GetShopFloorMachineLoad?MachineNo=${scannedMachineCode}`),
 					]);
 
 					// Set machine details and validate operation codes
