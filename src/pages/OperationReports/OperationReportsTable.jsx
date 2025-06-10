@@ -39,17 +39,12 @@ import { useApi } from '@/services/machineAPIService';
 import { ImFileExcel } from 'react-icons/im';
 import * as XLSX from 'xlsx';
 
-function OperationReportsTable({ data }) {
+function OperationReportsTable({ data, filters, setFilters }) {
 	const { fetchData } = useApi();
 	const [openRows, setOpenRows] = useState({});
 	const [modalData, setModalData] = useState(null);
 	const [open, setOpen] = useState(false);
 	const [showTemplate, setShowTemplate] = useState(false);
-	const [filters, setFilters] = useState({
-		fromDate: dayjs(),
-		toDate: dayjs(),
-		operation: '',
-	});
 
 	const handleCloseModal = () => {
 		setOpen(false);
@@ -59,9 +54,9 @@ function OperationReportsTable({ data }) {
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-	const fetchDetails = async (routeSheetNo) => {
+	const fetchDetails = async (routeSheet) => {
 		try {
-			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheet}?statusflag=1`);
 			setModalData(response);
 			setOpen(true);
 		} catch (err) {
@@ -71,14 +66,8 @@ function OperationReportsTable({ data }) {
 	};
 
 	const filteredData = data.filter((row) => {
-		const rowDate = dayjs(row.date);
-		const fromValid =
-			!filters.fromDate || rowDate.isAfter(filters.fromDate, 'day') || rowDate.isSame(filters.fromDate, 'day');
-		const toValid =
-			!filters.toDate || rowDate.isBefore(filters.toDate, 'day') || rowDate.isSame(filters.toDate, 'day');
 		const opValid = !filters.operation || row.operation.toLowerCase().includes(filters.operation.toLowerCase());
-
-		return fromValid && toValid && opValid;
+		return opValid;
 	});
 
 	const handleExportExcel = () => {
@@ -88,7 +77,9 @@ function OperationReportsTable({ data }) {
 				Operation: item.operation,
 				'Total Weight (Kgs)': item.totalWT,
 				'Route Sheets': item.routeSheetCount,
-				Details: item.details.map((d) => `${d.routeSheet} (${d.totalWeight.toFixed(2)} Kgs)`).join(', '),
+				Details: (item.details || [])
+					.map((d) => `${d.routeSheet} (${d.totalWeight.toFixed(2)} Kgs, Machine: ${d.machineNo || 'N/A'})`)
+					.join(', '),
 			})),
 		);
 		const wb = XLSX.utils.book_new();
@@ -113,14 +104,6 @@ function OperationReportsTable({ data }) {
 		}, 100);
 	};
 
-	useEffect(() => {
-		setFilters((prev) => ({
-			...prev,
-			fromDate: dayjs(),
-			toDate: dayjs(),
-		}));
-	}, []);
-
 	const handleToggle = (key) => {
 		setOpenRows((prev) => ({ ...prev, [key]: !prev[key] }));
 	};
@@ -129,7 +112,6 @@ function OperationReportsTable({ data }) {
 		setFilters((prev) => ({ ...prev, [field]: value }));
 	};
 
-	// Group data by date
 	const groupedByDate = filteredData.reduce((acc, row) => {
 		const dateKey = dayjs(row.date).format('DD/MM/YYYY');
 		if (!acc[dateKey]) {
@@ -140,12 +122,15 @@ function OperationReportsTable({ data }) {
 			};
 		}
 		acc[dateKey].rows.push(row);
-		acc[dateKey].totalWT += row.totalWT;
+		acc[dateKey].totalWT += row.totalWT || 0;
 		acc[dateKey].routeSheetCount += row.routeSheetCount || 0;
 		return acc;
 	}, {});
 
 	const uniqueOperations = [...new Set(data.map((item) => item.operation))];
+	const uniqueMachineNos = [
+		...new Set(data.flatMap((item) => (item.details || []).map((d) => d.machineNo).filter(Boolean))),
+	];
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -180,7 +165,24 @@ function OperationReportsTable({ data }) {
 								minDate={filters.fromDate}
 							/>
 						</Grid>
-						<Grid item xs={12} sm={3}>
+						<Grid item xs={12} sm={2}>
+							<FormControl fullWidth>
+								<InputLabel>Machine No</InputLabel>
+								<Select
+									value={filters.machineNo}
+									label="Machine No"
+									onChange={(e) => handleFilterChange('machineNo')(e.target.value)}
+								>
+									<MenuItem value="">All Machines</MenuItem>
+									{uniqueMachineNos.map((machineNo) => (
+										<MenuItem key={machineNo} value={machineNo}>
+											{machineNo}
+										</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={12} sm={2}>
 							<FormControl fullWidth>
 								<InputLabel>Operation</InputLabel>
 								<Select
@@ -215,7 +217,6 @@ function OperationReportsTable({ data }) {
 						<TableBody>
 							{Object.entries(groupedByDate).map(([date, group], groupIdx) => (
 								<React.Fragment key={date}>
-									{/* Date Group Header */}
 									<TableRow sx={{ backgroundColor: '#f5f5f5' }}>
 										<TableCell colSpan={3}>
 											<strong>{date}</strong>
@@ -236,7 +237,6 @@ function OperationReportsTable({ data }) {
 										</TableCell>
 									</TableRow>
 
-									{/* Group Rows */}
 									{group.rows.map((row, idx) => (
 										<React.Fragment key={`${date}-${idx}`}>
 											<TableRow>
@@ -264,7 +264,6 @@ function OperationReportsTable({ data }) {
 												<TableCell>{row.routeSheetCount}</TableCell>
 											</TableRow>
 
-											{/* Collapsible Details */}
 											<TableRow>
 												<TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
 													<Collapse
@@ -281,10 +280,11 @@ function OperationReportsTable({ data }) {
 																		<TableCell>Cutting No</TableCell>
 																		<TableCell>Weight</TableCell>
 																		<TableCell>Quantity</TableCell>
+																		<TableCell>Machine No</TableCell>
 																	</TableRow>
 																</TableHead>
 																<TableBody>
-																	{row.details.map((detail, dIdx) => (
+																	{(row.details || []).map((detail, dIdx) => (
 																		<TableRow key={dIdx}>
 																			<TableCell>
 																				<Button
@@ -306,14 +306,15 @@ function OperationReportsTable({ data }) {
 																			<TableCell>{detail.cuttingNo}</TableCell>
 																			<TableCell>
 																				<Chip
-																					label={`${detail.totalWeight.toFixed(
-																						2,
-																					)} Kgs`}
+																					label={`${detail.totalWeight.toFixed(2)} Kgs`}
 																					size="small"
 																					color="primary"
 																				/>
 																			</TableCell>
 																			<TableCell>{detail.totalQunty}</TableCell>
+																			<TableCell>
+																				{detail.machineNo || 'N/A'}
+																			</TableCell>
 																		</TableRow>
 																	))}
 																</TableBody>
@@ -328,7 +329,6 @@ function OperationReportsTable({ data }) {
 							))}
 						</TableBody>
 
-						{/* Grand Total Footer */}
 						<TableFooter>
 							<TableRow>
 								<TableCell colSpan={3} align="right">
@@ -337,7 +337,7 @@ function OperationReportsTable({ data }) {
 								<TableCell>
 									<Chip
 										label={`${filteredData
-											.reduce((sum, row) => sum + row.totalWT, 0)
+											.reduce((sum, row) => sum + (row.totalWT || 0), 0)
 											.toFixed(2)} Kgs`}
 										size="medium"
 										color="primary"
@@ -356,14 +356,13 @@ function OperationReportsTable({ data }) {
 				</TableContainer>
 			</Paper>
 
-			{/* Modal for Production Order Details */}
 			<Dialog open={open} onClose={handleCloseModal} maxWidth="lg" fullScreen={fullScreen} fullWidth>
 				<DialogTitle variant="h4" bgcolor={'primary.paper'}>
 					INPROCESS INSPECTION REPORT OF {modalData ? modalData?.routeSheetNo : ''}
 					<IconButton
 						aria-label="close"
 						onClick={handleCloseModal}
-						sx={{ position: 'absolute', right: 8, top: 8 }} // Adjusted right position
+						sx={{ position: 'absolute', right: 8, top: 8 }}
 					>
 						<CloseOutlined />
 					</IconButton>
@@ -395,7 +394,6 @@ function OperationReportsTable({ data }) {
 														<TableCell justifyContent="center" align="center">
 															<strong>Machine Number</strong>
 														</TableCell>
-
 														<TableCell justifyContent="center" align="center">
 															<strong>Date</strong>
 														</TableCell>
@@ -429,7 +427,7 @@ function OperationReportsTable({ data }) {
 																	{detail.operation_Description}
 																</TableCell>
 																<TableCell justifyContent="center" align="center">
-																	{detail.machineNo}
+																	{detail.machineNo || 'N/A'}
 																</TableCell>
 																<TableCell>
 																	<Box
@@ -455,7 +453,6 @@ function OperationReportsTable({ data }) {
 																		</Typography>
 																	</Box>
 																</TableCell>
-
 																<TableCell justifyContent="center" align="center">
 																	{detail.shift}
 																</TableCell>

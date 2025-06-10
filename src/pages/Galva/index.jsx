@@ -115,29 +115,40 @@ function GalvaCheckForm() {
 				setNoWorkingDetails(true); // Set no working details to true
 				enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
 			} else {
-				const filteredDetails = response.details.filter(
-					(detail) =>
-						(['G', 'R'].includes(detail.operation_Code) &&
+				const hasInspectionCodes = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.some(
+						(detail) =>
+							(['C', 'P', 'S', 'I', 'H', 'B', 'N'].includes(detail.operation_Code) &&
+								detail.isWorking === 0 &&
+								detail.isCompleted === 0 &&
+								detail.isQC_Done === 0) ||
+							(['I'].includes(detail.operation_Code) &&
+								detail.isWorking === 1 &&
+								detail.isCompleted === 1 &&
+								detail.isQC_Done === 0),
+					);
+				if (hasInspectionCodes) {
+					enqueueSnackbar('Complete the upper Operation', { variant: 'warning' });
+					console.log('Has Inspection Codes:', hasInspectionCodes);
+					setShowInspectionStack(hasInspectionCodes);
+					setNoWorkingDetails(response.details.length);
+					return;
+				}
+
+				const filteredDetails = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.filter(
+						(detail) =>
+							['G', 'R'].includes(detail.operation_Code) &&
 							detail.isWorking === 0 &&
 							detail.isCompleted === 0 &&
-							detail.isQC_Done === 0) ||
-						(['G', 'R'].includes(detail.operation_Code) &&
-							detail.isWorking === 1 &&
-							detail.isCompleted === 0 &&
-							detail.isQC_Done === 0),
-				);
+							detail.isQC_Done === 0,
+					);
 				console.log(filteredDetails);
 				setDetails({ ...response, details: filteredDetails });
 				setCheckQuantity(filteredDetails[0]?.totalQunty || 0);
 				setEmployeeDetails(null);
-
-				// Check for Inspection Codes (I, G, R)
-				// const hasInspectionCodes = filteredDetails.some((detail) =>
-				// 	['I', 'G', 'R', 'RFD'].includes(detail.operation_Code),
-				// );
-				// console.log('Has Inspection Codes:', hasInspectionCodes);
-				// setShowInspectionStack(hasInspectionCodes);
-				// setNoWorkingDetails(filteredDetails.length === 0); // Update the No working details to true
 			}
 		} catch (e) {
 			enqueueSnackbar(`Failed to fetch details: ${e.message}`, { variant: 'error' });
@@ -320,7 +331,7 @@ function GalvaCheckForm() {
 		setInfoModalOpen(true);
 
 		try {
-			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
 			console.log(response);
 			setIconData(response);
 		} catch (error) {
@@ -397,9 +408,11 @@ function GalvaCheckForm() {
 				)}
 
 				{noWorkingDetails && !loading && (
-					<Alert variant="filled" severity="warning">
-						No operations available for the current process.
-					</Alert>
+					<>
+						<Alert variant="filled" severity="warning">
+							QCF are still Pending.
+						</Alert>
+					</>
 				)}
 
 				{!loading && details && !showInspectionStack && !noWorkingDetails && (
@@ -559,32 +572,6 @@ function GalvaCheckForm() {
 					</>
 				)}
 
-				{showInspectionStack && details && (
-					<Stack
-						sx={{
-							borderRadius: 1,
-							border: 2,
-							borderColor: 'primary.main',
-							borderStyle: 'dotted',
-							bgcolor: 'background.paper',
-							p: 2,
-							mb: 2,
-						}}
-					>
-						<CardHeader1 title={`${details?.details[0]?.operation_Description} Required`} />
-						<Typography mb={2}>
-							This route sheet has operations that require {details?.details[0]?.operation_Description}.
-							Please ensure all steps are completed correctly.
-						</Typography>
-						<ConfirmButton
-							onConfirm={handleInspect}
-							isLoading={loading}
-							buttonText={`Send for ${details?.details[0]?.operation_Description}`}
-							confirmText="Are you sure you want to Send For  Galva Check?"
-						/>
-					</Stack>
-				)}
-
 				<Dialog open={infoModalOpen} onClose={() => setInfoModalOpen(false)} maxWidth="md" fullWidth>
 					<DialogTitle sx={{ p: 1 }} variant="h6" bgcolor={'#f5f5f5'}>
 						Route Sheet Details
@@ -661,14 +648,35 @@ function GalvaCheckForm() {
 														</TableRow>
 													</TableHead>
 													<TableBody>
-														{iconData.details.map((detail) => (
-															<TableRow key={detail.id}>
-																<TableCell>{detail.operation_Number}</TableCell>
-																<TableCell>{detail.operation_Code}</TableCell>
-																<TableCell>{detail.operation_Description}</TableCell>
-																<TableCell>{detail.totalQunty}</TableCell>
-															</TableRow>
-														))}
+														{iconData.details
+															.sort((a, b) => a.operation_Number - b.operation_Number)
+															.map((detail) => {
+																let backgroundColor = 'inherit';
+																let quantityDisplay = detail.totalQunty;
+
+																if (
+																	detail.isCompleted === 1 &&
+																	detail.isWorking === 1
+																) {
+																	if (detail.isQC_Done === 1) {
+																		backgroundColor = '#C6F4D6'; // Green
+																	} else if (detail.isQC_Done === 0) {
+																		backgroundColor = '#FFF3CD'; // Yellow
+																		quantityDisplay = `${detail.totalQunty} (QC Pending)`;
+																	}
+																}
+
+																return (
+																	<TableRow key={detail.id} sx={{ backgroundColor }}>
+																		<TableCell>{detail.operation_Number}</TableCell>
+																		<TableCell>{detail.operation_Code}</TableCell>
+																		<TableCell>
+																			{detail.operation_Description}
+																		</TableCell>
+																		<TableCell>{quantityDisplay}</TableCell>
+																	</TableRow>
+																);
+															})}
 													</TableBody>
 												</Table>
 											) : (

@@ -109,10 +109,9 @@ function QCCheckForm() {
 				enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
 			} else {
 				console.log(response);
-				// Filter for the data having isWorking = 1 and isCompleted = 0
-				const filteredDetails = response.details.filter(
-					(detail) => detail.isWorking === 1 && detail.isCompleted === 1 && detail.isQC_Done === 0,
-				);
+				const filteredDetails = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.filter((detail) => detail.isWorking === 1 && detail.isCompleted === 1 && detail.isQC_Done === 0);
 				setDetails({ ...response, details: filteredDetails });
 				setCheckQuantity(filteredDetails[0]?.totalQunty || 0);
 				setEmployeeDetails(null);
@@ -246,7 +245,7 @@ function QCCheckForm() {
 		setInfoModalOpen(true);
 
 		try {
-			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
 			console.log(response);
 			setIconData(response);
 		} catch (error) {
@@ -572,14 +571,35 @@ function QCCheckForm() {
 														</TableRow>
 													</TableHead>
 													<TableBody>
-														{iconData.details.map((detail) => (
-															<TableRow key={detail.id}>
-																<TableCell>{detail.operation_Number}</TableCell>
-																<TableCell>{detail.operation_Code}</TableCell>
-																<TableCell>{detail.operation_Description}</TableCell>
-																<TableCell>{detail.totalQunty}</TableCell>
-															</TableRow>
-														))}
+														{iconData.details
+															.sort((a, b) => a.operation_Number - b.operation_Number)
+															.map((detail) => {
+																let backgroundColor = 'inherit';
+																let quantityDisplay = detail.totalQunty;
+
+																if (
+																	detail.isCompleted === 1 &&
+																	detail.isWorking === 1
+																) {
+																	if (detail.isQC_Done === 1) {
+																		backgroundColor = '#C6F4D6'; // Green
+																	} else if (detail.isQC_Done === 0) {
+																		backgroundColor = '#FFF3CD'; // Yellow
+																		quantityDisplay = `${detail.totalQunty} (QC Pending)`;
+																	}
+																}
+
+																return (
+																	<TableRow key={detail.id} sx={{ backgroundColor }}>
+																		<TableCell>{detail.operation_Number}</TableCell>
+																		<TableCell>{detail.operation_Code}</TableCell>
+																		<TableCell>
+																			{detail.operation_Description}
+																		</TableCell>
+																		<TableCell>{quantityDisplay}</TableCell>
+																	</TableRow>
+																);
+															})}
 													</TableBody>
 												</Table>
 											) : (

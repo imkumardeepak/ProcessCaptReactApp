@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-	Breadcrumbs,
-	Typography,
-	Box,
-	CircularProgress,
-	Card,
-	Stack, // Import TableContainer
-} from '@mui/material';
+import { Breadcrumbs, Typography, Box, CircularProgress, Card, Stack } from '@mui/material';
 import PageHeader from '@/components/pageHeader';
-
 import { useApi } from '@/services/machineAPIService';
 import OperationReportsTable from './OperationReportsTable';
+import dayjs from 'dayjs';
 
 function OperationReports() {
 	return (
@@ -28,16 +21,29 @@ function OperationReports() {
 	);
 }
 
-function DataTableSection({ endpoint }) {
+function DataTableSection({ endpoint, name }) {
 	const { fetchData } = useApi();
 	const [data, setData] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState(null);
+	const [filters, setFilters] = useState({
+		fromDate: dayjs(),
+		toDate: dayjs(),
+		machineNo: '',
+		operation: '',
+	});
 
 	const refetch = async () => {
 		setIsLoading(true);
 		try {
-			const fetchedData = await fetchData(endpoint);
+			const fromDate = filters.fromDate.format('YYYY-MM-DD');
+			const toDate = filters.toDate.format('YYYY-MM-DD');
+			const queryParams = new URLSearchParams({
+				fromDate,
+				toDate,
+				...(filters.machineNo && { MachineNo: filters.machineNo }),
+			}).toString();
+			const fetchedData = await fetchData(`${endpoint}?${queryParams}`);
 			setData(fetchedData);
 			console.log(fetchedData);
 			setError(null);
@@ -51,33 +57,22 @@ function DataTableSection({ endpoint }) {
 
 	useEffect(() => {
 		refetch();
-	}, [endpoint]);
-
-	if (isLoading) {
-		return (
-			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
-				<CircularProgress />
-			</Box>
-		);
-	}
-
-	if (error) {
-		return (
-			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
-				<Typography variant="h6" color="error">
-					Failed to load data.
-				</Typography>
-			</Box>
-		);
-	}
+	}, [filters.fromDate, filters.toDate, filters.machineNo, endpoint]);
 
 	return (
 		<>
 			<Card>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+				<Box
+					sx={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						p: 2,
+					}}
+				>
 					<Stack>
 						<Typography variant="h4" fontWeight="500" textTransform="uppercase">
-							Daily Operation Report
+							{name}
 						</Typography>
 						<Typography variant="body1" color="text.secondary">
 							See the daily operation report below.
@@ -85,7 +80,19 @@ function DataTableSection({ endpoint }) {
 					</Stack>
 				</Box>
 				<Box>
-					<OperationReportsTable data={data} />
+					{isLoading ? (
+						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
+							<CircularProgress />
+						</Box>
+					) : error ? (
+						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
+							<Typography variant="h6" color="error">
+								Failed to load data.
+							</Typography>
+						</Box>
+					) : (
+						<OperationReportsTable data={data} filters={filters} setFilters={setFilters} />
+					)}
 				</Box>
 			</Card>
 		</>

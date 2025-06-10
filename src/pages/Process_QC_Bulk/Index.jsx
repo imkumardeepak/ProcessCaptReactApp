@@ -100,9 +100,9 @@ function QCCheckFormBulk() {
 					}
 				}, 100);
 			} else {
-				const filteredDetails = response.details.filter(
-					(detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0,
-				);
+				const filteredDetails = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.filter((detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0);
 				const hasMatchingOperation = machineOperationCodes.some((code) =>
 					filteredDetails.map((detail) => detail.operation_Code).includes(code),
 				);

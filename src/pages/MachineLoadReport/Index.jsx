@@ -18,10 +18,15 @@ import {
 	DialogTitle,
 	IconButton,
 	Dialog,
+	TextField,
 } from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
 import { useApi } from '@/services/machineAPIService';
 import DataTable from '@/components/dataTable/Example';
 import { CloseOutlined } from '@mui/icons-material';
+import { enqueueSnackbar } from 'notistack';
 
 // Time Difference Component
 function TimeDifferenceCell({ releaseDate }) {
@@ -44,7 +49,6 @@ function TimeDifferenceCell({ releaseDate }) {
 				const diffMs = currentTime - releaseTime;
 				const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-				// Check if difference is more than 2 days
 				setIsOverThreshold(diffDays > 2);
 
 				const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -67,7 +71,7 @@ function TimeDifferenceCell({ releaseDate }) {
 			variant="body2"
 			sx={{
 				backgroundColor: isOverThreshold ? '#d32f2f' : 'green',
-				color: isOverThreshold ? '#fff' : '#fff',
+				color: '#fff',
 				padding: '4px 8px',
 				borderRadius: '4px',
 				display: 'inline-block',
@@ -101,17 +105,29 @@ function DataTableSection({ name, endpoint }) {
 	const [error, setError] = useState(null);
 	const [selectedMachine, setSelectedMachine] = useState(null);
 	const [open, setOpen] = useState(false);
+	const [filters, setFilters] = useState({
+		fromDate: dayjs(), // Today: June 10, 2025
+		toDate: dayjs(), // Today: June 10, 2025
+	});
 
 	const refetch = async () => {
 		setIsLoading(true);
 		try {
-			const fetchedData = await fetchData(endpoint);
-			setData(fetchedData);
-			console.log(fetchedData);
+			const fromDate = filters.fromDate.format('YYYY-MM-DD');
+			const toDate = filters.toDate.format('YYYY-MM-DD');
+			const queryParams = new URLSearchParams({
+				fromDate,
+				toDate,
+			}).toString();
+			const fetchedData = await fetchData(`${endpoint}?${queryParams}`);
+			setData(fetchedData || []);
+			console.log('Fetched data:', fetchedData);
 			setError(null);
 		} catch (err) {
-			setError(err);
+			console.error('Fetch error:', err);
+			setError(err.message);
 			setData([]);
+			enqueueSnackbar(`Failed to load data: ${err.message}`, { variant: 'error' });
 		} finally {
 			setIsLoading(false);
 		}
@@ -119,7 +135,7 @@ function DataTableSection({ name, endpoint }) {
 
 	useEffect(() => {
 		refetch();
-	}, [endpoint]);
+	}, [filters.fromDate, filters.toDate, endpoint]);
 
 	const handleOpen = (machine) => {
 		setSelectedMachine(machine);
@@ -146,7 +162,7 @@ function DataTableSection({ name, endpoint }) {
 					}}
 					onClick={() => handleOpen(cell.row.original)}
 				>
-					{cell.getValue()}
+					{cell.getValue() || 'N/A'}
 				</Typography>
 			),
 		},
@@ -160,19 +176,15 @@ function DataTableSection({ name, endpoint }) {
 			header: 'Total Wt',
 			size: 300,
 			Cell: ({ cell }) => {
-				// Convert to number and format to max 3 decimal places
-				const formattedValue = parseFloat(cell.getValue()).toFixed(3);
-				// Remove trailing zeros and unnecessary decimal point
-				const cleanValue = formattedValue.replace(/\.?0+$/, '');
-				return <Chip label={`${cleanValue} Kgs`} size="small" color="success" />;
+				const value = parseFloat(cell.getValue());
+				const formattedValue = isNaN(value) ? '0' : value.toFixed(3).replace(/\.?0+$/, '');
+				return <Chip label={`${formattedValue} Kgs`} size="small" color="success" />;
 			},
-			enableSorting: true,
-			enableGrouping: true,
 		},
 	];
 
 	return (
-		<>
+		<LocalizationProvider dateAdapter={AdapterDayjs}>
 			<Card>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
 					<Stack>
@@ -183,8 +195,23 @@ function DataTableSection({ name, endpoint }) {
 							See the {name}.
 						</Typography>
 					</Stack>
+					<Stack direction="row" spacing={2}>
+						<DatePicker
+							label="From Date"
+							value={filters.fromDate}
+							onChange={(value) => setFilters((prev) => ({ ...prev, fromDate: value }))}
+							renderInput={(params) => <TextField {...params} size="small" />}
+						/>
+						<DatePicker
+							label="To Date"
+							value={filters.toDate}
+							onChange={(value) => setFilters((prev) => ({ ...prev, toDate: value }))}
+							renderInput={(params) => <TextField {...params} size="small" />}
+							minDate={filters.fromDate}
+						/>
+					</Stack>
 				</Box>
-				<Box>
+				<Box p={2}>
 					{isLoading ? (
 						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
 							<CircularProgress />
@@ -192,7 +219,7 @@ function DataTableSection({ name, endpoint }) {
 					) : error ? (
 						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
 							<Typography variant="h6" color="error">
-								Failed to load data.
+								Failed to load data: {error}
 							</Typography>
 						</Box>
 					) : (
@@ -210,7 +237,7 @@ function DataTableSection({ name, endpoint }) {
 								<IconButton
 									aria-label="close"
 									onClick={handleClose}
-									sx={{ position: 'absolute', right: 8, top: 8 }} // Adjusted right position
+									sx={{ position: 'absolute', right: 8, top: 8 }}
 								>
 									<CloseOutlined />
 								</IconButton>
@@ -223,7 +250,7 @@ function DataTableSection({ name, endpoint }) {
 									<Box p={2}>
 										<Typography>Total Sheets: {selectedMachine.routeSheet}</Typography>
 										<Typography>
-											Total Weight: {`${parseFloat(selectedMachine.totalWT).toFixed(2)} Kgs`}
+											Total Weight: {`${parseFloat(selectedMachine.totalWT || 0).toFixed(2)} Kgs`}
 										</Typography>
 									</Box>
 								</Card>
@@ -244,7 +271,7 @@ function DataTableSection({ name, endpoint }) {
 											<TableBody>
 												{selectedMachine.details?.map((detail, index) => (
 													<TableRow key={index}>
-														<TableCell>{detail.routeSheet}</TableCell>
+														<TableCell>{detail.routeSheet || '-'}</TableCell>
 														<TableCell>
 															{detail.releaseDate
 																? new Date(detail.releaseDate).toLocaleString('en-IN', {
@@ -266,14 +293,14 @@ function DataTableSection({ name, endpoint }) {
 														<TableCell>{detail.cuttingNo || '-'}</TableCell>
 														<TableCell>
 															<Chip
-																label={`${parseFloat(detail.totalWeight).toFixed(2)} Kgs`}
+																label={`${parseFloat(detail.totalWeight || 0).toFixed(2)} Kgs`}
 																size="small"
 																color="secondary"
 															/>
 														</TableCell>
 														<TableCell>
 															<Chip
-																label={detail.totalQunty}
+																label={detail.totalQunty || 0}
 																size="small"
 																color="primary"
 															/>
@@ -289,7 +316,7 @@ function DataTableSection({ name, endpoint }) {
 					)}
 				</Box>
 			</Dialog>
-		</>
+		</LocalizationProvider>
 	);
 }
 

@@ -5,8 +5,7 @@ import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, TextField, Toolt
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function RouteSheetSummaryReport() {
 	return (
@@ -29,11 +28,21 @@ function DataTableSection({ name, endpoint }) {
 	const [data, setData] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState(null);
+	const [filters, setFilters] = useState({
+		fromDate: dayjs(), // Today: June 10, 2025
+		toDate: dayjs(), // Today: June 10, 2025
+	});
 
 	const refetch = async () => {
 		setIsLoading(true);
 		try {
-			const fetchedData = await fetchData(endpoint);
+			const fromDate = filters.fromDate.format('YYYY-MM-DD');
+			const toDate = filters.toDate.format('YYYY-MM-DD');
+			const queryParams = new URLSearchParams({
+				fromDate,
+				toDate,
+			}).toString();
+			const fetchedData = await fetchData(`${endpoint}?${queryParams}`);
 			setData(fetchedData);
 			console.log(fetchedData);
 			setError(null);
@@ -47,7 +56,7 @@ function DataTableSection({ name, endpoint }) {
 
 	useEffect(() => {
 		refetch();
-	}, [endpoint]);
+	}, [filters.fromDate, filters.toDate, endpoint]);
 
 	const columns = [
 		{
@@ -78,10 +87,9 @@ function DataTableSection({ name, endpoint }) {
 			accessorKey: 'routeSheet',
 			header: 'Route Sheet',
 			size: 120,
-			Cell: ({ cell }) => <Chip label={cell.getValue()} size="small" color="success" />,
+			Cell: ({ cell }) => <Chip label={cell.getValue() || 'N/A'} size="small" color="success" />,
 			enableSorting: false,
 		},
-
 		{
 			accessorKey: 'markNo',
 			header: 'Mark No',
@@ -98,7 +106,7 @@ function DataTableSection({ name, endpoint }) {
 			accessorKey: 'pendingOperation',
 			header: 'Pending Operations',
 			size: 150,
-			Cell: ({ cell }) => <Chip label={cell.getValue()} size="small" color="error" />,
+			Cell: ({ cell }) => <Chip label={cell.getValue() || 'None'} size="small" color="error" />,
 			enableSorting: false,
 		},
 		{
@@ -114,7 +122,7 @@ function DataTableSection({ name, endpoint }) {
 			enableSorting: false,
 		},
 		{
-			accessorKey: 'toatlwt',
+			accessorKey: 'totalWt',
 			header: 'Weight',
 			size: 120,
 			enableSorting: false,
@@ -137,9 +145,7 @@ function DataTableSection({ name, endpoint }) {
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
-				const batchList = batches.map((item) => item.batchNo).join(', ');
-
+				const batchList = batches.map((item) => item.batchNo).join(', ') || 'N/A';
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -153,9 +159,7 @@ function DataTableSection({ name, endpoint }) {
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
-				const batchList = batches.map((item) => item.ciP_Number).join(', ');
-
+				const batchList = batches.map((item) => item.ciP_Number).join(', ') || 'N/A';
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -165,13 +169,11 @@ function DataTableSection({ name, endpoint }) {
 		},
 		{
 			accessorKey: 'embosing',
-			header: 'Embosing',
+			header: 'Embossing',
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
-				const batchList = batches.map((item) => item.embosingNumber).join(', ');
-
+				const batchList = batches.map((item) => item.embosingNumber).join(', ') || 'N/A';
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -181,26 +183,8 @@ function DataTableSection({ name, endpoint }) {
 		},
 	];
 
-	if (isLoading) {
-		return (
-			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
-				<CircularProgress />
-			</Box>
-		);
-	}
-
-	if (error) {
-		return (
-			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
-				<Typography variant="h6" color="error">
-					Failed to load data.
-				</Typography>
-			</Box>
-		);
-	}
-
 	return (
-		<>
+		<LocalizationProvider dateAdapter={AdapterDayjs}>
 			<Card>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
 					<Stack>
@@ -211,12 +195,39 @@ function DataTableSection({ name, endpoint }) {
 							See the {name}.
 						</Typography>
 					</Stack>
+					<Stack direction="row" spacing={2}>
+						<DatePicker
+							label="From Date"
+							value={filters.fromDate}
+							onChange={(value) => setFilters((prev) => ({ ...prev, fromDate: value }))}
+							renderInput={(params) => <TextField {...params} size="small" />}
+						/>
+						<DatePicker
+							label="To Date"
+							value={filters.toDate}
+							onChange={(value) => setFilters((prev) => ({ ...prev, toDate: value }))}
+							renderInput={(params) => <TextField {...params} size="small" />}
+							minDate={filters.fromDate}
+						/>
+					</Stack>
 				</Box>
-				<Box>
-					<DataTable columns={columns} data={data} />
+				<Box p={2}>
+					{isLoading ? (
+						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
+							<CircularProgress />
+						</Box>
+					) : error ? (
+						<Box display="flex" justifyContent="center" alignItems="center" height="200px">
+							<Typography variant="h6" color="error">
+								Failed to load data.
+							</Typography>
+						</Box>
+					) : (
+						<DataTable columns={columns} data={data} />
+					)}
 				</Box>
 			</Card>
-		</>
+		</LocalizationProvider>
 	);
 }
 

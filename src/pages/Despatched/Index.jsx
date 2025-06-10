@@ -115,18 +115,44 @@ function DespatchedForm() {
 				setNoWorkingDetails(true); // Set no working details to true
 				enqueueSnackbar('No details are available for this Route Sheet', { variant: 'info' });
 			} else {
-				const filteredDetails = response.details.filter(
-					(detail) =>
-						(['RFD'].includes(detail.operation_Code) &&
+				const Pending = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.filter(
+						(detail) =>
+							detail.operation_Code !== 'RFD' &&
 							detail.isWorking === 0 &&
 							detail.isCompleted === 0 &&
-							detail.isQC_Done === 0) ||
-						(['RFD'].includes(detail.operation_Code) &&
-							detail.isWorking === 1 &&
-							detail.isCompleted === 0 &&
-							detail.isQC_Done === 0),
+							detail.isQC_Done === 0,
+					);
+				console.log(Pending);
+				if (Pending.length > 0) {
+					enqueueSnackbar('Complete the upper Operation', { variant: 'warning' });
+					setDetails(null);
+					setCheckQuantity(0);
+					return;
+				}
+				const qultycheck = response.details.filter(
+					(detail) => detail.isWorking === 1 && detail.isCompleted === 1 && detail.isQC_Done === 0,
 				);
-				console.log(filteredDetails);
+				if (qultycheck.length > 0) {
+					enqueueSnackbar('Quality check Pending', { variant: 'warning' });
+					return;
+				}
+				const filteredDetails = response.details.filter(
+					(detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0,
+				);
+				const sortedDetails = [...filteredDetails].sort((a, b) =>
+					a.operation_Code.localeCompare(b.operation_Number),
+				);
+				const hasInspectionCodes =
+					sortedDetails.length > 0 && ['RFD'].includes(sortedDetails[0].operation_Code);
+				console.log(hasInspectionCodes);
+				if (!hasInspectionCodes) {
+					setShowInspectionStack(hasInspectionCodes);
+					setNoWorkingDetails(filteredDetails.length);
+					return;
+				}
+
 				setDetails({ ...response, details: filteredDetails });
 				setCheckQuantity(filteredDetails[0]?.totalQunty || 0);
 				setEmployeeDetails(null);
@@ -268,7 +294,7 @@ function DespatchedForm() {
 		setInfoModalOpen(true);
 
 		try {
-			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
 			console.log(response);
 			setIconData(response);
 		} catch (error) {
@@ -345,9 +371,11 @@ function DespatchedForm() {
 				)}
 
 				{noWorkingDetails && !loading && (
-					<Alert variant="filled" severity="warning">
-						No operations available for the current process.
-					</Alert>
+					<>
+						<Alert variant="filled" severity="warning">
+							No operations available for the current process.
+						</Alert>
+					</>
 				)}
 
 				{!loading && details && !showInspectionStack && !noWorkingDetails && (
@@ -582,14 +610,35 @@ function DespatchedForm() {
 														</TableRow>
 													</TableHead>
 													<TableBody>
-														{iconData.details.map((detail) => (
-															<TableRow key={detail.id}>
-																<TableCell>{detail.operation_Number}</TableCell>
-																<TableCell>{detail.operation_Code}</TableCell>
-																<TableCell>{detail.operation_Description}</TableCell>
-																<TableCell>{detail.totalQunty}</TableCell>
-															</TableRow>
-														))}
+														{iconData.details
+															.sort((a, b) => a.operation_Number - b.operation_Number)
+															.map((detail) => {
+																let backgroundColor = 'inherit';
+																let quantityDisplay = detail.totalQunty;
+
+																if (
+																	detail.isCompleted === 1 &&
+																	detail.isWorking === 1
+																) {
+																	if (detail.isQC_Done === 1) {
+																		backgroundColor = '#C6F4D6'; // Green
+																	} else if (detail.isQC_Done === 0) {
+																		backgroundColor = '#FFF3CD'; // Yellow
+																		quantityDisplay = `${detail.totalQunty} (QC Pending)`;
+																	}
+																}
+
+																return (
+																	<TableRow key={detail.id} sx={{ backgroundColor }}>
+																		<TableCell>{detail.operation_Number}</TableCell>
+																		<TableCell>{detail.operation_Code}</TableCell>
+																		<TableCell>
+																			{detail.operation_Description}
+																		</TableCell>
+																		<TableCell>{quantityDisplay}</TableCell>
+																	</TableRow>
+																);
+															})}
 													</TableBody>
 												</Table>
 											) : (

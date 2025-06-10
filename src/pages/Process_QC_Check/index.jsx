@@ -132,6 +132,7 @@ function QCCheckForm() {
 		setnextMachineDetails(null);
 		try {
 			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
+			console.log(response);
 			if (!response || !response.details) {
 				console.log('No details found for the route sheet.');
 				setDetails(null);
@@ -153,9 +154,9 @@ function QCCheckForm() {
 				}, 100);
 			} else {
 				setAllProductionDetails(response);
-				const filteredDetails = response.details.filter(
-					(detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0,
-				);
+				const filteredDetails = response.details
+					.sort((a, b) => a.operation_Number - b.operation_Number)
+					.filter((detail) => detail.isWorking === 0 && detail.isCompleted === 0 && detail.isQC_Done === 0);
 				setDetails({ ...response, details: filteredDetails });
 				setCheckQuantity(filteredDetails[0].totalQunty || 0);
 				setEmployeeDetails(null);
@@ -163,13 +164,15 @@ function QCCheckForm() {
 				setnextMachineDetails(null);
 				setMachineQRCode('');
 				setNextMachineQRCode('');
-				const hasInspectionCodes = filteredDetails.some((detail) =>
-					['R', 'G', 'RFD'].includes(detail.operation_Code),
+				const sortedDetails = [...filteredDetails].sort((a, b) =>
+					a.operation_Code.localeCompare(b.operation_Number),
 				);
+				const hasInspectionCodes =
+					sortedDetails.length > 0 && ['R', 'G', 'RFD'].includes(sortedDetails[0].operation_Code);
 				console.log('hasInspectionCodes', hasInspectionCodes);
 				if (hasInspectionCodes) {
 					console.log('Inspection codes found for this route sheet.');
-					setDetails(null);
+					// setDetails(null);
 					setCheckQuantity(0);
 					setMachineQRCode('');
 					setEmployeeDetails(null);
@@ -193,7 +196,7 @@ function QCCheckForm() {
 						machineQRRef.current.focus();
 					}
 				}, 100);
-				const hasRFI = filteredDetails.some((detail) => ['I'].includes(detail.operation_Code));
+				const hasRFI = sortedDetails.length > 0 && ['I'].includes(sortedDetails[0].operation_Code);
 				setShowInspectionStack(hasRFI);
 				setNoWorkingDetails(filteredDetails.length === 0);
 			}
@@ -543,7 +546,7 @@ function QCCheckForm() {
 		setInfoModalOpen(true);
 
 		try {
-			const response = await fetchData(`ProductionOrders/${routeSheetNo}`);
+			const response = await fetchData(`ProcessingOrders/routesheet/${routeSheetNo}?statusflag=1`);
 			console.log(response);
 			setIconData(response);
 		} catch (error) {
@@ -621,9 +624,39 @@ function QCCheckForm() {
 				)}
 
 				{noWorkingDetails && !loading && (
-					<Alert variant="filled" severity="warning">
-						No operations available for the current route sheet {routeSheetNo}
-					</Alert>
+					<>
+						<Alert variant="filled" severity="warning">
+							No operations available for the current route sheet {routeSheetNo}
+						</Alert>
+						<Typography variant="h4" color="initial" m={2}>
+							Pending Operations
+						</Typography>
+						<TableContainer component={Paper}>
+							<Table sx={{ minWidth: 650 }} aria-label="simple table">
+								<TableHead>
+									<TableRow>
+										<StyledTableCell>Operation Number</StyledTableCell>
+										<StyledTableCell>Operation Code</StyledTableCell>
+										<StyledTableCell>Operation Description</StyledTableCell>
+										<StyledTableCell>Total Quantity</StyledTableCell>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{details?.details.map((detail) => (
+										<TableRow
+											key={detail.id}
+											style={getRowStyles(detail.operation_Code, machineDetails)}
+										>
+											<TableCell>{detail.operation_Number}</TableCell>
+											<TableCell>{detail.operation_Code}</TableCell>
+											<TableCell>{detail.operation_Description}</TableCell>
+											<TableCell>{detail.totalQunty}</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</TableContainer>
+					</>
 				)}
 
 				{!loading && details && !showInspectionStack && !noWorkingDetails && (
@@ -969,30 +1002,35 @@ function QCCheckForm() {
 														</TableRow>
 													</TableHead>
 													<TableBody>
-														{iconData.details.map((detail) => (
-															<TableRow
-																key={detail.id}
-																sx={{
-																	backgroundColor:
-																		detail.isCompleted === 1
-																			? '#C6F4D6'
-																			: 'inherit',
-																}}
-															>
-																<TableCell>{detail.operation_Number}</TableCell>
-																<TableCell>{detail.operation_Code}</TableCell>
-																<TableCell>{detail.operation_Description}</TableCell>
-																<TableCell>
-																	{detail.totalQunty}
-																	{detail.isCompleted === 0 && (
-																		<CheckCircleOutline
-																			color="success"
-																			sx={{ ml: 1 }}
-																		/>
-																	)}
-																</TableCell>
-															</TableRow>
-														))}
+														{iconData.details
+															.sort((a, b) => a.operation_Number - b.operation_Number)
+															.map((detail) => {
+																let backgroundColor = 'inherit';
+																let quantityDisplay = detail.totalQunty;
+
+																if (
+																	detail.isCompleted === 1 &&
+																	detail.isWorking === 1
+																) {
+																	if (detail.isQC_Done === 1) {
+																		backgroundColor = '#C6F4D6'; // Green
+																	} else if (detail.isQC_Done === 0) {
+																		backgroundColor = '#FFF3CD'; // Yellow
+																		quantityDisplay = `${detail.totalQunty} (QC Pending)`;
+																	}
+																}
+
+																return (
+																	<TableRow key={detail.id} sx={{ backgroundColor }}>
+																		<TableCell>{detail.operation_Number}</TableCell>
+																		<TableCell>{detail.operation_Code}</TableCell>
+																		<TableCell>
+																			{detail.operation_Description}
+																		</TableCell>
+																		<TableCell>{quantityDisplay}</TableCell>
+																	</TableRow>
+																);
+															})}
 													</TableBody>
 												</Table>
 											) : (
