@@ -59,6 +59,7 @@
 		"react-text-mask": "^5.5.0",
 		"react-to-pdf": "^2.0.0",
 		"react-transition-group": "^4.4.5",
+		"react-virtualized": "^9.22.6",
 		"slim-mui-template": "file:",
 		"uuid": "^11.0.3",
 		"vite-plugin-pwa": "^0.21.1",

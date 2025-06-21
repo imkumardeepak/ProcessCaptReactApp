@@ -15,6 +15,7 @@ import {
 	Typography,
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
@@ -36,28 +37,13 @@ function PlanningReport() {
 
 function DataTableSection({ name, endpoint }) {
 	const { fetchData } = useApi();
-	const [data, setData] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState(null);
 
-	const refetch = async () => {
-		setIsLoading(true);
-		try {
-			const fetchedData = await fetchData(endpoint);
-			setData(fetchedData);
-			console.log(fetchedData);
-			setError(null);
-		} catch (err) {
-			setError(err);
-			setData([]);
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		refetch();
-	}, [endpoint]);
+	const { data, isLoading, error, refetch } = useQuery({
+		queryKey: ['planningWiseReport'], // Unique key for caching
+		queryFn: () => fetchData(endpoint), // Fetch with pagination params
+		keepPreviousData: true, // Keep previous data while fetching new page
+		staleTime: 5 * 60 * 1000, // Cache for 10 minutes
+	});
 
 	const columns = [
 		{

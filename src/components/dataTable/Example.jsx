@@ -68,6 +68,7 @@ function DataTable({ columns, data }) {
 	);
 
 	const memoizedColumns = useMemo(() => columns, [columns]);
+	const memoizedData = useMemo(() => data, [data]);
 
 	// CSV export configuration
 	const csvConfig = mkConfig({
@@ -222,7 +223,7 @@ function DataTable({ columns, data }) {
 			<ThemeProvider theme={tableTheme}>
 				<MaterialReactTable
 					columns={memoizedColumns}
-					data={data}
+					data={memoizedData}
 					// enableRowNumbers={true}
 					// rowNumberDisplayMode="static"
 					initialState={{

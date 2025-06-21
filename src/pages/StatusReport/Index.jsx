@@ -39,6 +39,7 @@ import CustomersOverviewCard from './customerCard';
 import SalesOverviewCard from './salesOverviewCard';
 import SaleProgressCard from './saleProgressCard';
 import MostVisitedCard from './mostVisitedCard';
+import { useQuery } from '@tanstack/react-query';
 
 function StatusReport() {
 	return (
@@ -58,10 +59,7 @@ function StatusReport() {
 
 function DataTableSection({ endpoint }) {
 	const { fetchData } = useApi();
-	const [data, setData] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
 	const [isCuttingLoading, setIsCuttingLoading] = useState(false);
-	const [error, setError] = useState(null);
 	const [modalData, setModalData] = useState(null);
 	const [open, setOpen] = useState(false);
 	const [cuttingData, setCuttingData] = useState(null);
@@ -69,6 +67,13 @@ function DataTableSection({ endpoint }) {
 
 	const theme = useTheme();
 	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+	const { data, isLoading, error, refetch } = useQuery({
+		queryKey: ['statusReport'], // Unique key for caching
+		queryFn: () => fetchData(endpoint), // Fetch with pagination params
+		keepPreviousData: true, // Keep previous data while fetching new page
+		staleTime: 5 * 60 * 1000, // Cache for 10 minutes
+	});
 
 	const fetchDetails = async (routeSheetNo) => {
 		try {
@@ -78,21 +83,6 @@ function DataTableSection({ endpoint }) {
 		} catch (err) {
 			enqueueSnackbar('Error fetching details:', { variant: 'error' });
 			setOpen(false);
-		}
-	};
-
-	const refetch = async () => {
-		setIsLoading(true);
-		try {
-			const fetchedData = await fetchData(endpoint);
-			console.log(fetchedData);
-			setData(fetchedData);
-			setError(null);
-		} catch (err) {
-			setError(err);
-			setData([]);
-		} finally {
-			setIsLoading(false);
 		}
 	};
 
@@ -110,10 +100,6 @@ function DataTableSection({ endpoint }) {
 			setIsCuttingLoading(false);
 		}
 	};
-
-	useEffect(() => {
-		refetch();
-	}, [endpoint]);
 
 	const handleCloseModal = () => {
 		setOpen(false);

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DataTable from '@/components/dataTable/Example';
 import PageHeader from '@/components/pageHeader';
 import { useApi } from '@/services/machineAPIService';
-import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Breadcrumbs, Card, Chip, CircularProgress, Stack, Tooltip, Typography, Pagination } from '@mui/material';
 
 function GalvaReport() {
 	return (
@@ -22,28 +23,13 @@ function GalvaReport() {
 
 function DataTableSection({ name, endpoint }) {
 	const { fetchData } = useApi();
-	const [data, setData] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState(null);
 
-	const refetch = async () => {
-		setIsLoading(true);
-		try {
-			const fetchedData = await fetchData(endpoint);
-			setData(fetchedData);
-			console.log(fetchedData);
-			setError(null);
-		} catch (err) {
-			setError(err);
-			setData([]);
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		refetch();
-	}, [endpoint]);
+	const { data, isLoading, error, refetch } = useQuery({
+		queryKey: ['galvaReport'], // Unique key for caching
+		queryFn: () => fetchData(endpoint), // Fetch with pagination params
+		keepPreviousData: true, // Keep previous data while fetching new page
+		staleTime: 5 * 60 * 1000, // Cache for 10 minutes
+	});
 
 	const columns = [
 		{
@@ -62,7 +48,6 @@ function DataTableSection({ name, endpoint }) {
 			},
 			enableSorting: false,
 		},
-
 		{
 			accessorKey: 'projectCode',
 			header: 'Project Code',
@@ -75,7 +60,6 @@ function DataTableSection({ name, endpoint }) {
 			size: 150,
 			enableSorting: false,
 		},
-
 		{
 			accessorKey: 'cutting',
 			header: 'Cutting Instruction',
@@ -101,7 +85,6 @@ function DataTableSection({ name, endpoint }) {
 			size: 180,
 			enableSorting: true,
 		},
-
 		{
 			accessorKey: 'operation',
 			header: 'Pending Operations',
@@ -109,7 +92,6 @@ function DataTableSection({ name, endpoint }) {
 			Cell: ({ cell }) => <Chip label={cell.getValue().toUpperCase()} size="small" color="error" />,
 			enableSorting: false,
 		},
-
 		{
 			accessorKey: 'qnty',
 			header: 'Qnty',
@@ -146,9 +128,7 @@ function DataTableSection({ name, endpoint }) {
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
 				const batchList = batches.map((item) => item.batchNo).join(', ');
-
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -162,9 +142,7 @@ function DataTableSection({ name, endpoint }) {
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
 				const batchList = batches.map((item) => item.ciP_Number).join(', ');
-
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -178,9 +156,7 @@ function DataTableSection({ name, endpoint }) {
 			size: 110,
 			Cell: ({ row }) => {
 				const batches = row.original.batchDetails || [];
-				// Extract batch names and join with commas
 				const batchList = batches.map((item) => item.embosingNumber).join(', ');
-
 				return (
 					<Tooltip title={batchList}>
 						<span>{batchList}</span>
@@ -189,8 +165,9 @@ function DataTableSection({ name, endpoint }) {
 			},
 		},
 	];
-	// Render Loading/Error States
-	if (isLoading) {
+
+	// Render Loading State
+	if (isLoading && !data) {
 		return (
 			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
 				<CircularProgress />
@@ -198,34 +175,33 @@ function DataTableSection({ name, endpoint }) {
 		);
 	}
 
+	// Render Error State
 	if (error) {
 		return (
 			<Box display="flex" justifyContent="center" alignItems="center" height="200px">
 				<Typography variant="h6" color="error">
-					Failed to load data.
+					Failed to load data: {error.message}
 				</Typography>
 			</Box>
 		);
 	}
 
 	return (
-		<>
-			<Card>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-					<Stack>
-						<Typography variant="h4" fontWeight="500" textTransform="uppercase">
-							{name}
-						</Typography>
-						<Typography variant="body1" color="text.secondary">
-							See the {name}.
-						</Typography>
-					</Stack>
-				</Box>
-				<Box>
-					<DataTable columns={columns} data={data} />
-				</Box>
-			</Card>
-		</>
+		<Card>
+			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+				<Stack>
+					<Typography variant="h4" fontWeight="500" textTransform="uppercase">
+						{name}
+					</Typography>
+					<Typography variant="body1" color="text.secondary">
+						See the {name}.
+					</Typography>
+				</Stack>
+			</Box>
+			<Box>
+				<DataTable columns={columns} data={data || []} />
+			</Box>
+		</Card>
 	);
 }
 
