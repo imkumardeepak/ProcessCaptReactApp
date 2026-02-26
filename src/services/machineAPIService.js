@@ -56,6 +56,37 @@ export const useApi = () => {
 		}
 	};
 
+	const FetchExcel = async (endpoint) => {
+		try {
+			const token = getAuthToken();
+			if (!token) {
+				handleTokenExpiry(navigate);
+				return false;
+			}
+
+			const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+				headers: {
+					Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (response.status === 401) {
+				handleTokenExpiry(navigate);
+				return false;
+			}
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch data. HTTP Status: ${response.status}`);
+			}
+
+			return await response.blob();
+		} catch (error) {
+			// enqueueSnackbar(`Error: ${error.message}`, { variant: 'error' });
+			return false;
+		}
+	};
+
 	const deleteResource = async (endpoint, id, onSuccess, onError) => {
 		try {
 			const token = getAuthToken();
@@ -173,5 +204,5 @@ export const useApi = () => {
 		}
 	};
 
-	return { fetchData, deleteResource, createResource, updateResource };
+	return { fetchData, FetchExcel, deleteResource, createResource, updateResource };
 };

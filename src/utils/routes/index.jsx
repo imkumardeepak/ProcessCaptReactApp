@@ -37,6 +37,7 @@ const ChatPage = withLazyLoadably(lazy(() => import('@/pages/ChatPage/Index')));
 const Galva = withLazyLoadably(lazy(() => import('@/pages/Galva/index')));
 const Despatched = withLazyLoadably(lazy(() => import('@/pages/Despatched/Index')));
 const QualityCheck = withLazyLoadably(lazy(() => import('@/pages/QualityCheck/index')));
+const ExcelExport = withLazyLoadably(lazy(() => import('@/pages/ExcelExport/index')));
 const LoadersComponentPage = withLazyLoadably(lazy(() => import('@/pages/componentsPages/loaders')));
 const TablesComponentPage = withLazyLoadably(lazy(() => import('@/pages/componentsPages/tables')));
 const ModalComponentPage = withLazyLoadably(lazy(() => import('@/pages/componentsPages/modal')));
@@ -319,6 +320,14 @@ function Router() {
 									element={
 										<ProtectedRoute>
 											<MachineLoadReport />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="excelexport"
+									element={
+										<ProtectedRoute>
+											<ExcelExport />
 										</ProtectedRoute>
 									}
 								/>

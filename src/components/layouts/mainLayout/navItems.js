@@ -133,6 +133,10 @@ const NAV_LINKS_CONFIG = [
 				title: 'Machine Load Report',
 				href: '/pages/machineLoadReport',
 			},
+			{
+				title: 'Excel Export',
+				href: '/pages/excelexport',
+			},
 		],
 	},
 	{
